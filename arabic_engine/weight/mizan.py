@@ -7,6 +7,8 @@ What is its canonical pattern and root?
 
 from __future__ import annotations
 
+from typing import Optional
+
 from arabic_engine.core.enums_weight import WeightEligibility
 from arabic_engine.core.enums_singular import WordCategory
 from arabic_engine.core.types_weight import WeightRecord
@@ -17,11 +19,19 @@ class MizanClassifier:
     """Classifies a singular unit's weight ontology (eligibility, pattern, root)."""
 
     @staticmethod
-    def classify(unit: SingularUnit, pattern: str = "", root: str = "") -> WeightRecord:
+    def classify(
+        unit: SingularUnit,
+        pattern: str = "",
+        root: str = "",
+        semantic_values: Optional[tuple[float, ...]] = None,
+    ) -> WeightRecord:
         """Produce a WeightRecord with ontology fields populated.
 
         Particles are never weight-eligible.  Nouns and verbs require
         a non-empty pattern to be considered eligible.
+
+        If semantic_values is provided (a 13-element tuple), a
+        RootSemanticKernel is built and attached to the record.
         """
         record = WeightRecord()
 
@@ -37,4 +47,13 @@ class MizanClassifier:
         record.eligibility = WeightEligibility.ELIGIBLE
         record.pattern = pattern
         record.root = root
+
+        # Build semantic kernel if values are provided
+        if semantic_values is not None:
+            from arabic_engine.semantic_kernel.root_kernel import RootKernelBuilder
+            record.semantic_kernel = RootKernelBuilder.build(
+                root_text=root,
+                semantic_values=semantic_values,
+            )
+
         return record

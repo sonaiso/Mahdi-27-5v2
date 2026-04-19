@@ -18,6 +18,12 @@ from arabic_engine.core.types_singular import SingularUnit
 from arabic_engine.core.types_weight import WeightRecord, WeightedUnit
 from arabic_engine.core.types_composition import CompositionRelation
 from arabic_engine.core.types_judgement import Proposition, Judgement
+from arabic_engine.core.types_semantic import (
+    FormSemanticProfile,
+    PatternSemanticTransform,
+    RootSemanticKernel,
+    SemanticTransferResult,
+)
 
 from arabic_engine.singular.closure import SingularClosureEngine
 from arabic_engine.weight.closure import WeightClosureEngine
@@ -37,6 +43,7 @@ class ChainState:
     relations: list[CompositionRelation] = field(default_factory=list)
     proposition: Optional[Proposition] = None
     judgement: Optional[Judgement] = None
+    semantic_transfer: Optional[SemanticTransferResult] = None
     current_layer: Layer = Layer.PRE_U0_ADMISSIBILITY
     closed_layers: set[Layer] = field(default_factory=set)
     all_results: list[GateResult] = field(default_factory=list)
@@ -192,3 +199,54 @@ class MasterChain:
             self._state.closed_layers.add(Layer.JUDGEMENT)
 
         return result
+
+    def process_semantic_transfer(
+        self,
+        root_kernel: RootSemanticKernel,
+        pattern_transform: PatternSemanticTransform,
+        form_profile: FormSemanticProfile,
+    ) -> list[GateResult]:
+        """Process semantic transfer (requires weight closure).
+
+        Runs the semantic transfer engine and the semantic kernel closure
+        pipeline. The result is stored in the chain state and optionally
+        linked to the weight record.
+        """
+        # Weight must be closed
+        if (
+            self._state.weighted is None
+            or not self._state.weighted.weight.weight_closed
+        ):
+            r = GateResult(
+                verdict=GateVerdict.REJECT,
+                layer=Layer.WEIGHT_MIZAN,
+                reason="الوزن غير مقفل — لا يجوز نقل الحمولة الدلالية",
+                missing_condition="weight_closed",
+            )
+            self._state.all_results.append(r)
+            return [r]
+
+        from arabic_engine.semantic_kernel.transfer import SemanticTransferEngine
+        from arabic_engine.semantic_kernel.closure import (
+            SemanticKernelClosureEngine,
+        )
+
+        # Run transfer
+        transfer_result = SemanticTransferEngine.transfer(
+            root_kernel=root_kernel,
+            pattern_transform=pattern_transform,
+            form_profile=form_profile,
+        )
+
+        # Run closure
+        results = SemanticKernelClosureEngine.close(transfer_result)
+        for r in results:
+            self._tracer.record_gate(r)
+            self._state.all_results.append(r)
+
+        # Store result
+        self._state.semantic_transfer = transfer_result
+        self._state.weighted.weight.semantic_transfer = transfer_result
+        self._state.weighted.weight.semantic_kernel = root_kernel
+
+        return results

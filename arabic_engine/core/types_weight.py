@@ -18,6 +18,7 @@ from .enums_weight import (
     TemporalPotential,
     WeightEligibility,
 )
+from .types_semantic import RootSemanticKernel, SemanticTransferResult
 from .types_singular import SingularUnit
 
 
@@ -48,6 +49,10 @@ class WeightRecord:
     noun_eligible: bool = False
     verb_eligible: bool = False
     particle_eligible: bool = False
+
+    # Semantic kernel (optional — backward compatible)
+    semantic_kernel: Optional[RootSemanticKernel] = None
+    semantic_transfer: Optional[SemanticTransferResult] = None
 
     # Closure
     closure: ClosureStatus = ClosureStatus.OPEN
