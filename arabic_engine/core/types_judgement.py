@@ -2,6 +2,10 @@
 Judgement data types for the Arabic Cognitive Fractal Engine.
 
 Defines data structures for Layers 6-8: Proposition, Judgement, Qiyas.
+
+Semantic kernel integration: Propositions can aggregate semantic transfer
+results from their composition relations, and Judgements can incorporate
+semantic kernel information for semantically-informed truthiness assessments.
 """
 
 from __future__ import annotations
@@ -25,6 +29,20 @@ class Proposition:
     relations: list[CompositionRelation] = field(default_factory=list)
     closure: ClosureStatus = ClosureStatus.OPEN
 
+    @property
+    def semantic_coherence_score(self) -> float:
+        """Aggregate semantic compatibility across all composition relations.
+
+        Returns 1.0 if no semantic data is available (backward compatible).
+        """
+        scores = [
+            r.semantic_compatibility_score
+            for r in self.relations
+        ]
+        if not scores:
+            return 1.0
+        return sum(scores) / len(scores)
+
 
 # ---------------------------------------------------------------------------
 # Layer 7: Judgement
@@ -41,6 +59,7 @@ class Judgement:
     subject: str = ""
     criterion: str = ""
     reason: str = ""
+    semantic_confidence: float = 1.0  # semantic kernel confidence [0.0, 1.0]
     closure: ClosureStatus = ClosureStatus.OPEN
 
 

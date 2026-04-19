@@ -67,6 +67,7 @@ class JudgementModel:
             subject=subject,
             criterion=criterion,
             reason=reason,
+            semantic_confidence=proposition.semantic_coherence_score,
             closure=ClosureStatus.CLOSED,
         )
         return judgement, GateResult(
