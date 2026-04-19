@@ -209,8 +209,8 @@ class MasterChain:
         """Process semantic transfer (requires weight closure).
 
         Runs the semantic transfer engine and the semantic kernel closure
-        pipeline. The result is stored in the chain state and optionally
-        linked to the weight record.
+        pipeline. The result is stored in the chain state and linked to
+        the weight record only when closure succeeds.
         """
         # Weight must be closed
         if (
@@ -222,6 +222,41 @@ class MasterChain:
                 layer=Layer.WEIGHT_MIZAN,
                 reason="الوزن غير مقفل — لا يجوز نقل الحمولة الدلالية",
                 missing_condition="weight_closed",
+            )
+            self._state.all_results.append(r)
+            return [r]
+
+        # Consistency check: root_kernel must match the weight record's root
+        weight = self._state.weighted.weight
+        if root_kernel.root_text and weight.root and root_kernel.root_text != weight.root:
+            r = GateResult(
+                verdict=GateVerdict.REJECT,
+                layer=Layer.WEIGHT_MIZAN,
+                reason=(
+                    "تناقض بين نواة الجذر والوزن — "
+                    f"الجذر الدلالي '{root_kernel.root_text}' "
+                    f"لا يطابق جذر الوزن '{weight.root}'"
+                ),
+                missing_condition="root_consistency",
+            )
+            self._state.all_results.append(r)
+            return [r]
+
+        # Consistency check: pattern_transform must match the weight record's pattern
+        if (
+            pattern_transform.pattern_code
+            and weight.pattern
+            and pattern_transform.pattern_code != weight.pattern
+        ):
+            r = GateResult(
+                verdict=GateVerdict.REJECT,
+                layer=Layer.WEIGHT_MIZAN,
+                reason=(
+                    "تناقض بين مؤثر الوزن والوزن — "
+                    f"رمز الوزن الدلالي '{pattern_transform.pattern_code}' "
+                    f"لا يطابق وزن السجل '{weight.pattern}'"
+                ),
+                missing_condition="pattern_consistency",
             )
             self._state.all_results.append(r)
             return [r]
@@ -244,9 +279,10 @@ class MasterChain:
             self._tracer.record_gate(r)
             self._state.all_results.append(r)
 
-        # Store result
-        self._state.semantic_transfer = transfer_result
-        self._state.weighted.weight.semantic_transfer = transfer_result
-        self._state.weighted.weight.semantic_kernel = root_kernel
+        # Persist semantic transfer only after semantic closure succeeds
+        if transfer_result.closure == ClosureStatus.CLOSED:
+            self._state.semantic_transfer = transfer_result
+            self._state.weighted.weight.semantic_transfer = transfer_result
+            self._state.weighted.weight.semantic_kernel = root_kernel
 
         return results

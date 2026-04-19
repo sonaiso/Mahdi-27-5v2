@@ -50,10 +50,17 @@ class MizanClassifier:
 
         # Build semantic kernel if values are provided
         if semantic_values is not None:
-            from arabic_engine.semantic_kernel.root_kernel import RootKernelBuilder
-            record.semantic_kernel = RootKernelBuilder.build(
-                root_text=root,
-                semantic_values=semantic_values,
+            from arabic_engine.semantic_kernel.root_kernel import (
+                RootKernelBuilder,
+                ROOT_SEMANTIC_DIM,
             )
+            if len(semantic_values) != ROOT_SEMANTIC_DIM:
+                # Graceful degradation: invalid length → skip kernel construction
+                pass
+            else:
+                record.semantic_kernel = RootKernelBuilder.build(
+                    root_text=root,
+                    semantic_values=semantic_values,
+                )
 
         return record

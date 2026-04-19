@@ -14,8 +14,9 @@ from arabic_engine.core.types_semantic import (
     RootSemanticKernel,
 )
 
-# Threshold for cosine similarity to consider root–pattern compatible
-_COMPAT_THRESHOLD = 0.0  # non-negative similarity means not contradictory
+# Minimum match ratio (active pattern dims with non-zero root dims / active pattern dims)
+# to consider root–pattern compatible.  A ratio ≥ 0.5 → COMPATIBLE, > 0.0 → PARTIAL.
+_OVERLAP_COMPAT_RATIO = 0.5
 
 
 class CompatibilityChecker:
@@ -69,7 +70,7 @@ class CompatibilityChecker:
 
         match_ratio = matching_dims / active_pattern_dims
 
-        if match_ratio >= 0.5:
+        if match_ratio >= _OVERLAP_COMPAT_RATIO:
             return CompatibilityStatus.COMPATIBLE
         elif match_ratio > 0.0:
             return CompatibilityStatus.PARTIAL
