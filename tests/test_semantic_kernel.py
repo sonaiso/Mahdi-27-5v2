@@ -429,7 +429,11 @@ class TestSemanticTransferEngine:
         assert 0.0 <= result.compatibility_score <= 1.0
 
     def test_transfer_equation_values(self):
-        """Verify K_F = W_r·r + W_p·p + W_f·f + Δ_ctx with default weights."""
+        """Verify K_F = W_r·r_proj + W_p·p_proj + W_f·f_proj + Δ_ctx with default weights.
+
+        Vectors are projected into the common 13-dim root space via
+        semantic alignment mappings, not naive zero-padding.
+        """
         root = self._make_root()
         pat = self._make_pattern(seed_data.SEED_PATTERN_FA33ALA)
         form = self._make_form()
@@ -440,14 +444,17 @@ class TestSemanticTransferEngine:
             form_profile=form,
         )
 
-        # Manual computation with default weights (0.5, 0.3, 0.15, 0.05)
-        out_dim = 13  # max of 13, 12, 9
-        r_vals = root.semantic_vector.values + (0.0,) * 0  # already 13
-        p_vals = pat.semantic_transform_vector.values + (0.0,)  # 12 → 13
-        f_vals = form.form_semantic_vector.values + (0.0,) * 4  # 9 → 13
+        # Manually project using alignment mappings
+        from arabic_engine.semantic_kernel.alignment import project_to_common_space
+        r_proj, p_proj, f_proj = project_to_common_space(
+            root.semantic_vector,
+            pat.semantic_transform_vector,
+            form.form_semantic_vector,
+        )
 
+        out_dim = 13
         expected = tuple(
-            0.5 * r_vals[i] + 0.3 * p_vals[i] + 0.15 * f_vals[i] + 0.05 * 0.0
+            0.5 * r_proj.values[i] + 0.3 * p_proj.values[i] + 0.15 * f_proj.values[i] + 0.05 * 0.0
             for i in range(out_dim)
         )
 
