@@ -249,7 +249,9 @@ def test_master_chain_full_pipeline():
     assert weighted2.fully_closed
 
     # Build relation using chain's weighted unit
-    rel, _ = AsnadiRelationBuilder.build(weighted2, chain.state.weighted)
+    rel, rel_results = AsnadiRelationBuilder.build(weighted2, chain.state.weighted)
+    assert rel is not None
+    assert all(r.passed for r in rel_results)
 
     results = chain.process_composition([rel])
     assert all(r.passed for r in results)

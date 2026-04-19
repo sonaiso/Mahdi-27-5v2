@@ -43,3 +43,14 @@ time-of-build-after.log
 time-of-build-before.log
 time-of-build-both.log
 time-of-build-pretty.log
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.pytest_cache/
