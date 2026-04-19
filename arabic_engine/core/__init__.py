@@ -43,3 +43,19 @@ from .types_singular import (  # noqa: F401
 from .types_weight import WeightRecord, WeightedUnit  # noqa: F401
 from .types_composition import RoleAssignment, CompositionRelation  # noqa: F401
 from .types_judgement import Proposition, Judgement, Qiyas  # noqa: F401
+
+# --- Semantic enums and types -----------------------------------------------
+from .enums_semantic import (  # noqa: F401
+    SemanticDimension,
+    PatternSemanticDimension,
+    FormSemanticDimension,
+    CompatibilityStatus,
+)
+from .types_semantic import (  # noqa: F401
+    SemanticVector,
+    RootSemanticKernel,
+    PatternSemanticTransform,
+    FormSemanticProfile,
+    SemanticTransferResult,
+    SemanticCost,
+)
