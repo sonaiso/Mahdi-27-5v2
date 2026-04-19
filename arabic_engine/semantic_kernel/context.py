@@ -13,6 +13,7 @@ The context delta modifies the semantic transfer equation output:
 
 from __future__ import annotations
 
+import math
 from dataclasses import dataclass
 from typing import Optional
 
@@ -91,10 +92,12 @@ class ContextDeltaBuilder:
             values[1] += features.emphasis * 0.1
             values[2] += features.emphasis * 0.1
 
-        # Collocational bias — direct addition
+        # Collocational bias — direct addition (validated)
         if features.collocational_bias is not None:
             for i in range(min(len(features.collocational_bias), _CONTEXT_DIM)):
-                values[i] += features.collocational_bias[i]
+                val = features.collocational_bias[i]
+                if math.isfinite(val):
+                    values[i] += val
 
         return SemanticVector(values=tuple(values))
 

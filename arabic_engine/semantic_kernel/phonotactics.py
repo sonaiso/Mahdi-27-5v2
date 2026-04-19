@@ -32,7 +32,7 @@ class RootType(Enum):
 
 
 # Weak consonants in Arabic
-_WEAK_CONSONANTS = frozenset("ويوىءأإآؤئ")
+_WEAK_CONSONANTS = frozenset("ويىءأإآؤئ")
 _WAW = frozenset("وؤ")
 _YA = frozenset("يئى")
 _HAMZA = frozenset("ءأإآؤئ")
