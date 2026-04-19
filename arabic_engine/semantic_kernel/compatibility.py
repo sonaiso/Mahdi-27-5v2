@@ -3,19 +3,31 @@ Compatibility checker — validates root–pattern compatibility
 and the minimum-completeness condition (الحد الأدنى المكتمل).
 
 Complete_min(R,P,F) ⟺ ValidRoot(R) ∧ ValidPattern(P) ∧ Compatible(R,P) ∧ Realizable(F)
+
+Uses a two-stage check:
+  1. Dimension-overlap heuristic (fast pre-filter)
+  2. Cosine-similarity on projected vectors (precise check)
 """
 
 from __future__ import annotations
+
+import math
 
 from arabic_engine.core.enums_semantic import CompatibilityStatus
 from arabic_engine.core.types_semantic import (
     FormSemanticProfile,
     PatternSemanticTransform,
     RootSemanticKernel,
+    SemanticVector,
 )
+from .alignment import project_root_to_pattern_space
 
-# Threshold for cosine similarity to consider root–pattern compatible
-_COMPAT_THRESHOLD = 0.0  # non-negative similarity means not contradictory
+# Minimum match ratio (active pattern dims with non-zero root dims / active pattern dims)
+# to consider root–pattern compatible.  A ratio ≥ 0.5 → COMPATIBLE, > 0.0 → PARTIAL.
+_OVERLAP_COMPAT_RATIO = 0.5
+
+# Cosine-similarity threshold: ≥ this value → COMPATIBLE, ≥ 0.0 → PARTIAL.
+_COSINE_COMPAT_THRESHOLD = 0.0
 
 
 class CompatibilityChecker:
@@ -28,8 +40,11 @@ class CompatibilityChecker:
     ) -> CompatibilityStatus:
         """Check whether a root is compatible with a pattern.
 
-        Compatibility is determined by whether the root has non-zero values
-        in the semantic dimensions that the pattern attempts to shift.
+        Two-stage check:
+          1. Dimension-overlap: counts how many non-zero pattern dimensions
+             correspond to non-zero root dimensions (fast pre-filter).
+          2. Cosine-similarity: projects root vector into pattern space and
+             measures directional alignment (precise).
 
         Returns:
             CompatibilityStatus — COMPATIBLE, INCOMPATIBLE, or PARTIAL.
@@ -51,10 +66,7 @@ class CompatibilityChecker:
             # A zero-transform pattern is a neutral passthrough — always compatible
             return CompatibilityStatus.COMPATIBLE
 
-        # Count how many pattern shift dimensions correspond to
-        # non-zero root dimensions (using overlapping dimension indices).
-        # Since root has 13 dims and pattern has 12 dims, we use the
-        # minimum of the two for overlap analysis.
+        # Stage 1: Dimension-overlap heuristic (fast pre-filter)
         overlap_dim = min(r_vec.dim, p_vec.dim)
         active_pattern_dims = sum(
             1 for i in range(overlap_dim) if abs(p_vec.values[i]) > 0.0
@@ -69,12 +81,37 @@ class CompatibilityChecker:
 
         match_ratio = matching_dims / active_pattern_dims
 
-        if match_ratio >= 0.5:
+        # If overlap check clearly rejects, no need for cosine
+        if match_ratio == 0.0:
+            return CompatibilityStatus.INCOMPATIBLE
+
+        # Stage 2: Cosine-similarity on projected vectors
+        r_projected = project_root_to_pattern_space(r_vec)
+        cosine_sim = r_projected.cosine_similarity(p_vec)
+
+        if match_ratio >= _OVERLAP_COMPAT_RATIO and cosine_sim >= _COSINE_COMPAT_THRESHOLD:
             return CompatibilityStatus.COMPATIBLE
-        elif match_ratio > 0.0:
+        elif match_ratio > 0.0 or cosine_sim >= _COSINE_COMPAT_THRESHOLD:
             return CompatibilityStatus.PARTIAL
         else:
             return CompatibilityStatus.INCOMPATIBLE
+
+    @staticmethod
+    def cosine_compatibility_score(
+        root_kernel: RootSemanticKernel,
+        pattern_transform: PatternSemanticTransform,
+    ) -> float:
+        """Return the cosine-similarity score between projected root and pattern.
+
+        Projects root vector into pattern space, then computes cosine similarity.
+        Returns 0.0 if either vector is zero.
+        """
+        r_vec = root_kernel.semantic_vector
+        p_vec = pattern_transform.semantic_transform_vector
+        if r_vec.dim == 0 or p_vec.dim == 0:
+            return 0.0
+        r_projected = project_root_to_pattern_space(r_vec)
+        return r_projected.cosine_similarity(p_vec)
 
     @staticmethod
     def valid_root(root_kernel: RootSemanticKernel) -> bool:

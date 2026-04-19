@@ -12,6 +12,9 @@ Gates:
 
 from __future__ import annotations
 
+import math
+from dataclasses import dataclass, field
+
 from arabic_engine.core.enums_gate import ClosureStatus, GateVerdict
 from arabic_engine.core.enums_domain import Layer
 from arabic_engine.core.enums_semantic import CompatibilityStatus
@@ -20,6 +23,53 @@ from arabic_engine.core.types_semantic import SemanticTransferResult
 
 from .compatibility import CompatibilityChecker
 from .economy import EconomyOptimizer
+
+
+@dataclass
+class ClosureTrace:
+    """Trace of a closure pipeline execution, recording which gates
+    passed and which failed with their reasons."""
+
+    gate_results: list[GateResult] = field(default_factory=list)
+    final_status: ClosureStatus = ClosureStatus.OPEN
+
+    @property
+    def failed_gate(self) -> GateResult | None:
+        """Return the first failing gate result, or None if all passed."""
+        for r in self.gate_results:
+            if not r.passed:
+                return r
+        return None
+
+    @property
+    def suggestions(self) -> list[str]:
+        """Generate human-readable correction suggestions based on failures."""
+        suggestions: list[str] = []
+        failed = self.failed_gate
+        if failed is None:
+            return suggestions
+
+        if failed.missing_condition == "root_pattern_compatibility":
+            suggestions.append(
+                "جرّب وزنًا مختلفًا — الجذر والوزن الحاليان غير متوافقين دلاليًا"
+                " (Try a different pattern — root and pattern are semantically incompatible)"
+            )
+        elif failed.missing_condition == "complete_min":
+            suggestions.append(
+                "أكمل الأبعاد الناقصة في نواة الجذر أو ملف الصيغة"
+                " (Complete missing dimensions in root kernel or form profile)"
+            )
+            suggestions.append(
+                "تحقق من أن رمز الوزن غير فارغ وله 12 بُعدًا"
+                " (Verify pattern code is non-empty and has 12 dimensions)"
+            )
+        elif failed.missing_condition == "finite_cost":
+            suggestions.append(
+                "الكلفة غير منتهية — تحقق من قيم المتجهات"
+                " (Infinite cost — check vector values for NaN or infinity)"
+            )
+
+        return suggestions
 
 
 class SemanticKernelClosureEngine:
@@ -88,7 +138,7 @@ class SemanticKernelClosureEngine:
 
         # Gate 3: Economy
         cost = EconomyOptimizer.compute_cost(result)
-        if not _is_finite(cost.total):
+        if not math.isfinite(cost.total):
             r = GateResult(
                 verdict=GateVerdict.REJECT,
                 layer=SemanticKernelClosureEngine.LAYER,
@@ -109,8 +159,15 @@ class SemanticKernelClosureEngine:
         result.closure = ClosureStatus.CLOSED
         return results
 
+    @staticmethod
+    def close_with_trace(result: SemanticTransferResult) -> ClosureTrace:
+        """Run closure and return a structured trace with suggestions.
 
-def _is_finite(value: float) -> bool:
-    """Check that a value is finite (not NaN or infinite)."""
-    import math
-    return math.isfinite(value)
+        This is a convenience method that wraps ``close()`` and packages
+        the results into a ``ClosureTrace`` with correction suggestions.
+        """
+        gate_results = SemanticKernelClosureEngine.close(result)
+        return ClosureTrace(
+            gate_results=gate_results,
+            final_status=result.closure,
+        )

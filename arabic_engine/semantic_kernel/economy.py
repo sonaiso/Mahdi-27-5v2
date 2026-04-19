@@ -75,3 +75,58 @@ class EconomyOptimizer:
                 best = candidate
 
         return best
+
+    @staticmethod
+    def select_pareto_optimal(
+        candidates: list[SemanticTransferResult],
+        tolerance: float = 0.05,
+    ) -> list[SemanticTransferResult]:
+        """Select Pareto-optimal candidates from a list.
+
+        A candidate is Pareto-optimal if no other candidate is strictly
+        better in all cost dimensions. When candidates have near-equal
+        total cost (within ``tolerance``), prefer those that form the
+        Pareto front — i.e. they represent different tradeoffs between
+        phonological, morphological, cognitive, and semantic ambiguity costs.
+
+        Args:
+            candidates: List of transfer results (assumed valid).
+            tolerance: Relative tolerance for considering costs "near-equal".
+
+        Returns:
+            List of Pareto-optimal candidates, sorted by total cost.
+        """
+        if not candidates:
+            return []
+
+        costs = [EconomyOptimizer.compute_cost(c) for c in candidates]
+        n = len(candidates)
+        dominated = [False] * n
+
+        for i in range(n):
+            for j in range(n):
+                if i == j:
+                    continue
+                # Check if j dominates i (j is ≤ in all dims and < in at least one)
+                ci = costs[i]
+                cj = costs[j]
+                dims_i = (ci.phonological_cost, ci.morphological_cost,
+                          ci.cognitive_cost, ci.semantic_ambiguity_cost)
+                dims_j = (cj.phonological_cost, cj.morphological_cost,
+                          cj.cognitive_cost, cj.semantic_ambiguity_cost)
+
+                all_leq = all(dj <= di for di, dj in zip(dims_i, dims_j))
+                any_lt = any(dj < di for di, dj in zip(dims_i, dims_j))
+
+                if all_leq and any_lt:
+                    dominated[i] = True
+                    break
+
+        pareto_front = [
+            candidates[i] for i in range(n) if not dominated[i]
+        ]
+
+        # Sort by total cost
+        pareto_front.sort(key=lambda c: EconomyOptimizer.compute_cost(c).total)
+
+        return pareto_front

@@ -6,6 +6,8 @@ Implements the semantic transfer equation:
     K_F = W_r · r_sem + W_p · p_sem + W_f · f_sem + Δ_ctx
 
 This is the function that transports meaning from root to form.
+Vectors are projected into a common 13-dim root space using semantic
+alignment mappings before blending.
 """
 
 from __future__ import annotations
@@ -23,6 +25,7 @@ from arabic_engine.core.types_semantic import (
     SemanticVector,
 )
 
+from .alignment import project_to_common_space
 from .compatibility import CompatibilityChecker
 
 # Default blending weights for the transfer equation
@@ -44,7 +47,8 @@ class SemanticTransferEngine:
         f_sem = form semantic vector (9-dim)
         Δ_ctx = context adjustment vector
 
-    All vectors are projected to a common dimension space before blending.
+    All vectors are projected into a common 13-dim root space using
+    semantic alignment mappings before blending.
     """
 
     @staticmethod
@@ -75,27 +79,15 @@ class SemanticTransferEngine:
         Returns:
             A SemanticTransferResult with the computed output kernel.
         """
-        # Determine the common output dimension (max of all input dims)
-        out_dim = max(
-            root_kernel.semantic_vector.dim,
-            pattern_transform.semantic_transform_vector.dim,
-            form_profile.form_semantic_vector.dim,
+        # Project all vectors into the common 13-dim root space
+        # using semantic alignment mappings
+        r_proj, p_proj, f_proj = project_to_common_space(
+            root_kernel.semantic_vector,
+            pattern_transform.semantic_transform_vector,
+            form_profile.form_semantic_vector,
         )
 
-        # If any input has zero dimension, use the largest non-zero one
-        if out_dim == 0:
-            out_dim = 1
-
-        # Project all vectors to the common dimension by padding with zeros
-        r_proj = SemanticTransferEngine._project(
-            root_kernel.semantic_vector, out_dim
-        )
-        p_proj = SemanticTransferEngine._project(
-            pattern_transform.semantic_transform_vector, out_dim
-        )
-        f_proj = SemanticTransferEngine._project(
-            form_profile.form_semantic_vector, out_dim
-        )
+        out_dim = r_proj.dim  # always 13
 
         # Context delta
         if context_delta is not None:

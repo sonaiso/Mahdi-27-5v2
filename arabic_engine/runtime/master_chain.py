@@ -86,8 +86,19 @@ class MasterChain:
 
         return results
 
-    def process_weight(self, weight: WeightRecord) -> list[GateResult]:
-        """Process layer 4 (weight closure)."""
+    def process_weight(
+        self,
+        weight: WeightRecord,
+        semantic_values: tuple[float, ...] | None = None,
+        pattern_transform_values: tuple[float, ...] | None = None,
+        form_values: tuple[float, ...] | None = None,
+    ) -> list[GateResult]:
+        """Process layer 4 (weight closure).
+
+        When ``semantic_values``, ``pattern_transform_values``, and
+        ``form_values`` are all provided, the semantic transfer step is
+        automatically chained after weight closure succeeds.
+        """
         if self._state.singular is None:
             r = GateResult(
                 verdict=GateVerdict.REJECT,
@@ -117,6 +128,51 @@ class MasterChain:
 
         if weighted.fully_closed:
             self._state.closed_layers.add(Layer.WEIGHT_MIZAN)
+
+        # Auto-chain semantic transfer when all semantic inputs are provided
+        if (
+            weighted.fully_closed
+            and semantic_values is not None
+            and pattern_transform_values is not None
+            and form_values is not None
+        ):
+            from arabic_engine.semantic_kernel.root_kernel import (
+                RootKernelBuilder,
+                ROOT_SEMANTIC_DIM,
+            )
+            from arabic_engine.semantic_kernel.pattern_transform import (
+                PatternTransformBuilder,
+                PATTERN_SEMANTIC_DIM,
+            )
+            from arabic_engine.semantic_kernel.form_profile import (
+                FormProfileBuilder,
+                FORM_SEMANTIC_DIM,
+            )
+
+            # Validate dimension counts before building
+            if (
+                len(semantic_values) == ROOT_SEMANTIC_DIM
+                and len(pattern_transform_values) == PATTERN_SEMANTIC_DIM
+                and len(form_values) == FORM_SEMANTIC_DIM
+            ):
+                root_kernel = RootKernelBuilder.build(
+                    root_text=weight.root,
+                    semantic_values=semantic_values,
+                )
+                pat_transform = PatternTransformBuilder.build(
+                    pattern_code=weight.pattern,
+                    transform_values=pattern_transform_values,
+                )
+                form_profile = FormProfileBuilder.build(
+                    pattern_id=pat_transform.pattern_id,
+                    form_values=form_values,
+                )
+                sem_results = self.process_semantic_transfer(
+                    root_kernel=root_kernel,
+                    pattern_transform=pat_transform,
+                    form_profile=form_profile,
+                )
+                results.extend(sem_results)
 
         return results
 
@@ -209,8 +265,8 @@ class MasterChain:
         """Process semantic transfer (requires weight closure).
 
         Runs the semantic transfer engine and the semantic kernel closure
-        pipeline. The result is stored in the chain state and optionally
-        linked to the weight record.
+        pipeline. The result is stored in the chain state and linked to
+        the weight record only when closure succeeds.
         """
         # Weight must be closed
         if (
@@ -222,6 +278,41 @@ class MasterChain:
                 layer=Layer.WEIGHT_MIZAN,
                 reason="الوزن غير مقفل — لا يجوز نقل الحمولة الدلالية",
                 missing_condition="weight_closed",
+            )
+            self._state.all_results.append(r)
+            return [r]
+
+        # Consistency check: root_kernel must match the weight record's root
+        weight = self._state.weighted.weight
+        if root_kernel.root_text and weight.root and root_kernel.root_text != weight.root:
+            r = GateResult(
+                verdict=GateVerdict.REJECT,
+                layer=Layer.WEIGHT_MIZAN,
+                reason=(
+                    "تناقض بين نواة الجذر والوزن — "
+                    f"الجذر الدلالي '{root_kernel.root_text}' "
+                    f"لا يطابق جذر الوزن '{weight.root}'"
+                ),
+                missing_condition="root_consistency",
+            )
+            self._state.all_results.append(r)
+            return [r]
+
+        # Consistency check: pattern_transform must match the weight record's pattern
+        if (
+            pattern_transform.pattern_code
+            and weight.pattern
+            and pattern_transform.pattern_code != weight.pattern
+        ):
+            r = GateResult(
+                verdict=GateVerdict.REJECT,
+                layer=Layer.WEIGHT_MIZAN,
+                reason=(
+                    "تناقض بين مؤثر الوزن والوزن — "
+                    f"رمز الوزن الدلالي '{pattern_transform.pattern_code}' "
+                    f"لا يطابق وزن السجل '{weight.pattern}'"
+                ),
+                missing_condition="pattern_consistency",
             )
             self._state.all_results.append(r)
             return [r]
@@ -244,9 +335,10 @@ class MasterChain:
             self._tracer.record_gate(r)
             self._state.all_results.append(r)
 
-        # Store result
-        self._state.semantic_transfer = transfer_result
-        self._state.weighted.weight.semantic_transfer = transfer_result
-        self._state.weighted.weight.semantic_kernel = root_kernel
+        # Persist semantic transfer only after semantic closure succeeds
+        if transfer_result.closure == ClosureStatus.CLOSED:
+            self._state.semantic_transfer = transfer_result
+            self._state.weighted.weight.semantic_transfer = transfer_result
+            self._state.weighted.weight.semantic_kernel = root_kernel
 
         return results
