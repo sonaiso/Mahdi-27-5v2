@@ -26,6 +26,7 @@ from arabic_engine.core.types_singular import (
     SingularUnit,
 )
 from arabic_engine.core.types_weight import WeightRecord, WeightedUnit
+from arabic_engine.core.types_semantic import SemanticVector
 
 from arabic_engine.singular.closure import SingularClosureEngine
 from arabic_engine.weight.closure import WeightClosureEngine
@@ -427,7 +428,8 @@ def test_fractal_hypothesis_structural_similarity():
     )
 
     # Structural similarity: same type, same dimension
-    assert type(result.input_kernel) is type(result.output_kernel)
+    assert isinstance(result.input_kernel, SemanticVector)
+    assert isinstance(result.output_kernel, SemanticVector)
     assert result.output_kernel.dim == max(
         root.semantic_vector.dim,
         pat.semantic_transform_vector.dim,
