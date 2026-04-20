@@ -12,12 +12,16 @@ from typing import Optional
 
 from arabic_engine.core.enums_gate import ClosureStatus, GateVerdict
 from arabic_engine.core.enums_domain import Layer, CommunicativeMode
-from arabic_engine.core.enums_judgement import JudgementDirection, JudgementRank
+from arabic_engine.core.enums_judgement import (
+    JudgementDirection,
+    JudgementRank,
+    QiyasKind,
+)
 from arabic_engine.core.types_gate import GateResult
 from arabic_engine.core.types_singular import SingularUnit
 from arabic_engine.core.types_weight import WeightRecord, WeightedUnit
 from arabic_engine.core.types_composition import CompositionRelation
-from arabic_engine.core.types_judgement import Proposition, Judgement
+from arabic_engine.core.types_judgement import Proposition, Judgement, Qiyas
 from arabic_engine.core.types_semantic import (
     FormSemanticProfile,
     PatternSemanticTransform,
@@ -34,6 +38,7 @@ from arabic_engine.weight.closure import WeightClosureEngine
 from arabic_engine.composition.closure import CompositionClosureEngine
 from arabic_engine.proposition.structure import PropositionBuilder
 from arabic_engine.judgement.model import JudgementModel
+from arabic_engine.communicative.khabar_insha import CommunicativeResult
 from arabic_engine.trace.unified import UnifiedTracer
 from arabic_engine.contracts.adjacency import AdjacencyContract
 
@@ -47,6 +52,8 @@ class ChainState:
     relations: list[CompositionRelation] = field(default_factory=list)
     proposition: Optional[Proposition] = None
     judgement: Optional[Judgement] = None
+    qiyas: Optional[Qiyas] = None
+    communicative_result: Optional[CommunicativeResult] = None
     semantic_transfer: Optional[SemanticTransferResult] = None
     language_container: Optional[TranscendentalContainer] = None
     current_layer: Layer = Layer.PRE_U0_ADMISSIBILITY
@@ -57,7 +64,7 @@ class ChainState:
 class MasterChain:
     """The single sovereign processing pipeline.
 
-    Processes a linguistic unit through all nine layers in strict order.
+    Processes a linguistic unit through all ten layers in strict order.
     """
 
     def __init__(self) -> None:
@@ -258,6 +265,86 @@ class MasterChain:
         if result.passed and judgement is not None:
             self._state.judgement = judgement
             self._state.closed_layers.add(Layer.JUDGEMENT)
+
+        return result
+
+    def process_communicative(
+        self,
+        mode: CommunicativeMode,
+    ) -> list[GateResult]:
+        """Process communicative classification (خبر/إنشاء).
+
+        This is a cross-cutting concern applied to the proposition.
+        It does not correspond to a numbered layer but enriches the
+        proposition with communicative mode information.
+
+        Requires a closed proposition.
+        """
+        if self._state.proposition is None:
+            r = GateResult(
+                verdict=GateVerdict.REJECT,
+                layer=Layer.PROPOSITION,
+                reason="لا توجد قضية — لا يمكن تصنيف النمط التواصلي",
+                missing_condition="proposition",
+            )
+            self._state.all_results.append(r)
+            return [r]
+
+        from arabic_engine.communicative.closure import CommunicativeClosureEngine
+
+        comm_result, results = CommunicativeClosureEngine.close(
+            self._state.proposition, mode,
+        )
+        for r in results:
+            self._tracer.record_gate(r)
+            self._state.all_results.append(r)
+
+        self._state.communicative_result = comm_result
+        return results
+
+    def process_qiyas(
+        self,
+        asl: str,
+        far3: str,
+        illa: str,
+        kind: QiyasKind,
+        hukm_transferred: str = "",
+    ) -> GateResult:
+        """Process layer 8 (qiyas — analogical reasoning).
+
+        القياس هو إلحاق فرع بأصل في حكم لعلّة جامعة بينهما.
+        """
+        adj = AdjacencyContract.check(Layer.QIYAS, self._state.closed_layers)
+        if not adj.passed:
+            self._state.all_results.append(adj)
+            return adj
+
+        if self._state.judgement is None:
+            r = GateResult(
+                verdict=GateVerdict.REJECT,
+                layer=Layer.QIYAS,
+                reason="لا يوجد حكم — لا يمكن بناء قياس",
+                missing_condition="judgement",
+            )
+            self._state.all_results.append(r)
+            return r
+
+        from arabic_engine.qiyas.model import QiyasModel
+
+        qiyas, result = QiyasModel.build(
+            judgement=self._state.judgement,
+            asl=asl,
+            far3=far3,
+            illa=illa,
+            kind=kind,
+            hukm_transferred=hukm_transferred,
+        )
+        self._tracer.record_gate(result)
+        self._state.all_results.append(result)
+
+        if result.passed and qiyas is not None:
+            self._state.qiyas = qiyas
+            self._state.closed_layers.add(Layer.QIYAS)
 
         return result
 

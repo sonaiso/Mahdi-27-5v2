@@ -26,6 +26,8 @@ class RuntimeSnapshot:
     composition_closed: bool
     proposition_closed: bool
     judgement_closed: bool
+    qiyas_closed: bool
+    language_closed: bool
     total_gate_results: int
     total_errors: int
 
@@ -45,6 +47,8 @@ class RuntimeView:
             composition_closed=Layer.COMPOSITIONAL_ROLES in state.closed_layers,
             proposition_closed=Layer.PROPOSITION in state.closed_layers,
             judgement_closed=Layer.JUDGEMENT in state.closed_layers,
+            qiyas_closed=Layer.QIYAS in state.closed_layers,
+            language_closed=Layer.LANGUAGE in state.closed_layers,
             total_gate_results=len(state.all_results),
             total_errors=sum(1 for r in state.all_results if not r.passed),
         )

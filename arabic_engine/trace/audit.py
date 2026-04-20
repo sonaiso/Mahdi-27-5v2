@@ -18,6 +18,11 @@ class TraceAuditor:
         Layer.SINGULAR_INFORMATIONAL,
         Layer.SINGULAR_CONCEPTUAL,
         Layer.WEIGHT_MIZAN,
+        Layer.COMPOSITIONAL_ROLES,
+        Layer.PROPOSITION,
+        Layer.JUDGEMENT,
+        Layer.QIYAS,
+        Layer.LANGUAGE,
     ]
 
     @staticmethod

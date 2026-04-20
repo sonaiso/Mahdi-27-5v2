@@ -75,6 +75,11 @@ def test_auditor_layer_coverage():
         Layer.SINGULAR_INFORMATIONAL,
         Layer.SINGULAR_CONCEPTUAL,
         Layer.WEIGHT_MIZAN,
+        Layer.COMPOSITIONAL_ROLES,
+        Layer.PROPOSITION,
+        Layer.JUDGEMENT,
+        Layer.QIYAS,
+        Layer.LANGUAGE,
     ]:
         log.append(TraceEvent(
             kind=TraceEventKind.GATE_CHECK,
