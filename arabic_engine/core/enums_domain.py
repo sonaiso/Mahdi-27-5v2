@@ -8,7 +8,7 @@ from enum import Enum, auto
 
 
 class Layer(Enum):
-    """The nine mandatory layers in strict ascending order."""
+    """The ten mandatory layers in strict ascending order."""
 
     PRE_U0_ADMISSIBILITY = 0
     SINGULAR_PERCEPTUAL = 1
@@ -19,6 +19,7 @@ class Layer(Enum):
     PROPOSITION = 6
     JUDGEMENT = 7
     QIYAS = 8
+    LANGUAGE = 9  # الوعاء الترنسندنتالي للغة — transcendental language container
 
 
 class RelationKind(Enum):

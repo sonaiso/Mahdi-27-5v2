@@ -1,7 +1,7 @@
 """
 Master chain — the single sovereign pipeline.
 
-Orchestrates the full processing chain from Pre-U0 through Judgement,
+Orchestrates the full processing chain from Pre-U0 through Language,
 enforcing adjacency and anti-jump contracts at every step.
 """
 
@@ -24,6 +24,10 @@ from arabic_engine.core.types_semantic import (
     RootSemanticKernel,
     SemanticTransferResult,
 )
+from arabic_engine.core.types_language import (
+    ReferenceBinding,
+    TranscendentalContainer,
+)
 
 from arabic_engine.singular.closure import SingularClosureEngine
 from arabic_engine.weight.closure import WeightClosureEngine
@@ -44,6 +48,7 @@ class ChainState:
     proposition: Optional[Proposition] = None
     judgement: Optional[Judgement] = None
     semantic_transfer: Optional[SemanticTransferResult] = None
+    language_container: Optional[TranscendentalContainer] = None
     current_layer: Layer = Layer.PRE_U0_ADMISSIBILITY
     closed_layers: set[Layer] = field(default_factory=set)
     all_results: list[GateResult] = field(default_factory=list)
@@ -340,5 +345,42 @@ class MasterChain:
             self._state.semantic_transfer = transfer_result
             self._state.weighted.weight.semantic_transfer = transfer_result
             self._state.weighted.weight.semantic_kernel = root_kernel
+
+        return results
+
+    def process_language(
+        self,
+        reference_bindings: list[ReferenceBinding] | None = None,
+    ) -> list[GateResult]:
+        """Process the language layer (transcendental container).
+
+        Builds the complete transcendental container Lang_tr and runs
+        closure.  Requires all preceding layers to be closed.
+
+        Parameters
+        ----------
+        reference_bindings : list[ReferenceBinding] | None
+            Optional reference bindings for the reference system.
+        """
+        adj = AdjacencyContract.check(Layer.LANGUAGE, self._state.closed_layers)
+        if not adj.passed:
+            self._state.all_results.append(adj)
+            return [adj]
+
+        from arabic_engine.language.container import TranscendentalContainerBuilder
+        from arabic_engine.language.closure import LanguageClosureEngine
+
+        container = TranscendentalContainerBuilder.build(
+            reference_bindings=reference_bindings,
+        )
+        self._state.language_container = container
+
+        results = LanguageClosureEngine.close(container)
+        for r in results:
+            self._tracer.record_gate(r)
+            self._state.all_results.append(r)
+
+        if container.closure == ClosureStatus.CLOSED:
+            self._state.closed_layers.add(Layer.LANGUAGE)
 
         return results

@@ -59,3 +59,21 @@ from .types_semantic import (  # noqa: F401
     SemanticTransferResult,
     SemanticCost,
 )
+
+# --- Language enums and types ------------------------------------------------
+from .enums_language import (  # noqa: F401
+    CognitiveCategory,
+    ContainerFunction,
+    LinguisticPosition,
+    RankConfusionKind,
+    ContainerValidityStatus,
+)
+from .types_language import (  # noqa: F401
+    CategorySlot,
+    ConstraintRecord,
+    PredicationRule,
+    ReferenceBinding,
+    TestabilityResult,
+    FeedbackRecord,
+    TranscendentalContainer,
+)

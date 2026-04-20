@@ -11,6 +11,7 @@ A structured Arabic cognitive-linguistic system proving that:
 Intellectual Leadership:
 - al-Nabhani: cognitive ordering, conception, subject liberation, judgement, anti-jump logic
 - Sibawayh: Arabic structural precision, grammatical roles, internal language architecture
+- Kant (conditions of possibility): language as transcendental container
 
 Packages:
 - core: enumerations, types, and gate logic (split into domain-specific modules)
@@ -20,6 +21,7 @@ Packages:
 - proposition: layer 6 (proposition structure and closure)
 - communicative: khabar/insha classification and stylistic closure
 - judgement: layer 7 (model, transition, closure)
+- language: layer 9 (transcendental container — Lang_tr)
 - trace: unified trace, replay, audit
 - contracts: adjacency, invariants, anti-jump, state mapping
 - runtime: master chain, runtime view, proof view

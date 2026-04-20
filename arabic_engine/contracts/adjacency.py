@@ -25,6 +25,7 @@ class AdjacencyContract:
         Layer.PROPOSITION,
         Layer.JUDGEMENT,
         Layer.QIYAS,
+        Layer.LANGUAGE,
     ]
 
     @staticmethod
