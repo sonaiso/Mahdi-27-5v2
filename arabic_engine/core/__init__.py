@@ -22,7 +22,12 @@ from .enums_weight import (  # noqa: F401
     SpatialPotential,
     DescriptivePotential,
 )
-from .enums_judgement import JudgementDirection, JudgementRank  # noqa: F401
+from .enums_judgement import (  # noqa: F401
+    JudgementDirection,
+    JudgementRank,
+    QiyasKind,
+    QiyasValidity,
+)
 from .enums_domain import (  # noqa: F401
     Layer,
     RelationKind,

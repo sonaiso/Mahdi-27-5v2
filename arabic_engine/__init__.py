@@ -21,6 +21,7 @@ Packages:
 - proposition: layer 6 (proposition structure and closure)
 - communicative: khabar/insha classification and stylistic closure
 - judgement: layer 7 (model, transition, closure)
+- qiyas: layer 8 (analogical reasoning — model, transition, closure)
 - language: layer 9 (transcendental container — Lang_tr)
 - trace: unified trace, replay, audit
 - contracts: adjacency, invariants, anti-jump, state mapping
