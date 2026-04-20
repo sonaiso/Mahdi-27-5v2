@@ -14,12 +14,13 @@ arabic_engine/
 ├── proposition/       # Layer 6: Proposition structure and closure
 ├── communicative/     # Khabar/Insha classification, stylistic closure
 ├── judgement/         # Layer 7: Judgement model, transition, closure
+├── language/          # Layer 9: Transcendental container (Lang_tr)
 ├── trace/             # Unified trace, replay, audit
 ├── contracts/         # Adjacency, invariants, anti-jump, state mapping
 └── runtime/           # Master chain, runtime view, proof view
 ```
 
-## The Nine Mandatory Layers
+## The Ten Mandatory Layers
 
 | Layer | Name | Description |
 |-------|------|-------------|
@@ -33,6 +34,7 @@ arabic_engine/
 | 6 | Proposition | القضية |
 | 7 | Judgement | الحكم |
 | 8 | Qiyas | القياس |
+| 9 | Language | الوعاء الترنسندنتالي — Lang_tr = Proj(Con(Ord(Rel(𝒦)))) |
 
 ## Installation
 
@@ -51,6 +53,7 @@ pytest tests/ -v
 
 - **al-Nabhani**: cognitive ordering, conception, subject liberation, judgement, anti-jump logic
 - **Sibawayh**: Arabic structural precision, grammatical roles, internal language architecture
+- **Kant** (conditions of possibility): language as transcendental container for cognitive categories
 
 ## Semantic Kernel (𝒦_root → 𝒦_form)
 
@@ -63,3 +66,22 @@ K_F = W_r · r_sem + W_p · p_sem + W_f · f_sem + Δ_ctx
 
 See [`docs/semantic_kernel_architecture_v1.md`](docs/semantic_kernel_architecture_v1.md)
 for the full mathematical specification.
+
+## Language as Transcendental Container (Lang_tr)
+
+Language is not the origin of reason but the transcendental container that
+collects cognitive categories after they form in the mind, prevents their
+confusion, and renders them expressible, predicable, referable, and testable.
+
+```
+Lang_tr = Proj(Con(Ord(Rel(𝒦))))
+
+𝒦 = {Entity, Quality, Event, Relation, Cause, Condition,
+      Negation, Quantity, Limitation, Reference, Temporality, Spatiality}
+
+Lang_tr = ⟨Lexicon, CategorySystem, PredicationRules,
+          ConstraintSystem, ReferenceSystem, TestabilityInterface⟩
+```
+
+See [`docs/language_transcendental_container_v1.md`](docs/language_transcendental_container_v1.md)
+for the full specification.
