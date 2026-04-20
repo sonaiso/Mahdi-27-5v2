@@ -355,8 +355,7 @@ class MasterChain:
         """Process the language layer (transcendental container).
 
         Builds the complete transcendental container Lang_tr and runs
-        closure.  Requires that the QIYAS layer is closed (or at least
-        the JUDGEMENT layer, since QIYAS is still a skeleton).
+        closure.  Requires all preceding layers to be closed.
 
         Parameters
         ----------

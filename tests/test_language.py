@@ -297,7 +297,7 @@ class TestPredicationEngine:
     def test_build_all_rules(self):
         """All valid subject–predicate rules are generated."""
         rules = PredicationEngine.build_all_rules()
-        # 2 subject cats × 6 predicate cats = 12 rules
+        # Exactly 2 subject categories × 6 predicate categories = 12 rules
         assert len(rules) == 12
         assert all(isinstance(r, PredicationRule) for r in rules)
         assert all(r.is_permitted for r in rules)
