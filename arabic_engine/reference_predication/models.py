@@ -432,7 +432,7 @@ class Sigma2Builder:
         SentenceSpace.NASKH: (PredicationType.NASKH, PropositionMode.KHABAR),
         SentenceSpace.INSHA: (PredicationType.INSHA, PropositionMode.INSHA),
     }
-    # Fixed khabari predication is stricter than baseline Σ1 and halves the allowed
+    # Fixed khabar predication is stricter than baseline Σ1 and halves the allowed
     # reference variance window (epsilon_rho / 2.0) to reduce referential drift.
     _KHABAR_STABILITY_FACTOR: float = 2.0
 
@@ -448,7 +448,7 @@ class Sigma2Builder:
         subject_mark: str,
         predicate_mark: str,
     ) -> bool:
-        # Low causal alignment cannot carry strong khabari raf/raf fixation.
+        # Low causal alignment cannot carry strong khabar raf/raf fixation.
         if (
             sentence_space is SentenceSpace.KHABAR
             and subject_mark == "raf"
@@ -560,7 +560,7 @@ class Sigma2Builder:
             )
         ):
             raise SigmaTransitionError(
-                "Unstable reference cannot enter fixed khabari predication"
+                "Unstable reference cannot enter fixed khabar predication"
             )
 
         case_impact = CaseImpactVector2(
