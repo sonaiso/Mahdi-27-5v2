@@ -41,6 +41,10 @@ Related Decisions: ADR-0001, ADR-0002, ADR-0003, DL-2026-04-r4-r12-governance-st
 - `docs/architecture/semantic-kernel_architecture_v1.md`
 - `docs/foundations/language-transcendental-container_foundation_v1.md`
 - `docs/foundations/weight-and-mizan-constitution_v1.md`
+- `docs/foundations/symbolic-ontological-foundation_v1.md`
+- `docs/foundations/foundational-l1-l2-glossary_v1.md`
+- `docs/foundations/foundational-l1-l2-traceability-matrix_v1.md`
+- `docs/decisions/adr/ADR-0004-additive-foundational-layer-first.md`
 
 ### Draft
 - `docs/roadmap/core-refactor-map_v1.md`

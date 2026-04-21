@@ -24,3 +24,5 @@ Subsystems:
   - feedback:     FeedbackLoop — Lang_tr → Clarification → Stabilization
   - closure:      LanguageClosureEngine — gate/closure for the language layer
 """
+
+from .foundational_hook import LanguageFoundationalAdapter  # noqa: F401
