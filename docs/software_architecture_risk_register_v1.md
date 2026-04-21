@@ -73,7 +73,7 @@ $$
 | R1 | تضخم `core` | تراكم enums/types/contracts/traces في مركز واحد حتى يفقد وضوحه الدلالي | 3 | 3 | 9 حرج | صعوبة التتبع، تكرار الأسماء، تضارب state models | تقسيم `core` إلى نوى فرعية بحسب النطاق | ✅ مغلق |
 | R2 | تعدد السلاسل | وجود أكثر من pipeline/chain/runtime path بلا Master Chain واضحة | 3 | 3 | 9 حرج | اختلاف معاني النجاح/الفشل/التعليق، trace متعددة | تعريف سلسلة سيادية واحدة، وتحويل البقية إلى adapters أو projections | ✅ مغلق |
 | R3 | فجوة تطبيق العقود | وجود contracts أقوى من التنفيذ الفعلي | 3 | 3 | 9 حرج | YAML غني لكن enforcement جزئي، mismatch غير مكتشف | تفعيل adjacency + invariants + runtime enforcement | ✅ مغلق |
-| R4 | عدم اكتمال الحواف والقيود | build_constraint_edges / validators / edge cases غير مغلقة | 3 | 3 | 9 حرج | نتائج صحيحة مركزيًا لكن غير ثابتة حدّيًا | بناء boundary suite + constraint edge audit + exception path tests | ⚠️ جزئي |
+| R4 | عدم اكتمال الحواف والقيود | build_constraint_edges / validators / edge cases غير مغلقة | 3 | 3 | 9 حرج | نتائج صحيحة مركزيًا لكن غير ثابتة حدّيًا | بناء boundary suite + constraint edge audit + exception path tests | ✅ مغلق رسميًا |
 | R5 | غياب تحرير المفرد | خلط التصور المفرد والمعلومة المفردة والمفهوم المفرد | 3 | 3 | 9 حرج | القفز من unicode إلى التركيب أو المفهوم | إنشاء `singular/` كنواة مستقلة بثلاث طبقات closure | ✅ مغلق |
 | R6 | غياب رتبة الوزن | الوزن يعامل كطبقة صرفية لا كشرط إمكان بنيوي | 3 | 3 | 9 حرج | فساد الاشتقاق، اضطراب built/inflected, noun/verb/particle legality | إنشاء `weight/` كنواة سيادية قبل composition | ✅ مغلق |
 | R7 | خلط التركيب بالتعيين | التركيب يعامل كتجميع أو parsing لا كتوزيع أدوار | 3 | 3 | 9 حرج | syntax labels بلا role-distribution semantics | إنشاء `composition/roles` + `relations/asnadi,tadmini,taqyidi` | ✅ مغلق |
@@ -81,7 +81,7 @@ $$
 | R9 | trace غير مغلقة تمامًا | replay / hash / evidence / edge cases غير مكتملة | 2 | 3 | 6 حرج | mismatch غير مفسر، replay جزئي أو هش | توحيد trace model + replay tests + failure semantics | ✅ مغلق |
 | R10 | التوسع قبل الغلق | API/DB/AI integration قبل إغلاق القلب الرمزي | 3 | 2 | 6 حرج | أعمال كثيرة outward-facing مع قلب غير ثابت | منع أي توسعة تشغيلية قبل إغلاق singular + weight + composition + judgement | ✅ مغلق |
 | R11 | تضارب taxonomy | تعدد مفاهيم الحالة والقرار والانتقال دون mapping صارم | 2 | 3 | 6 حرج | SUSPEND/REJECT/INVALID/PENDING... بلا ربط واضح | Unified State Model + mapping tests | ✅ مغلق |
-| R12 | اختبارات عددية لا بنيوية | كثرة الاختبارات مع ضعف نسبي في النقاط الحرجة | 2 | 3 | 6 حرج | coverage مقبولة لكن الحواف ضعيفة | تحويل strategy من count-driven إلى risk-driven | ⚠️ جزئي |
+| R12 | اختبارات عددية لا بنيوية | كثرة الاختبارات مع ضعف نسبي في النقاط الحرجة | 2 | 3 | 6 حرج | coverage مقبولة لكن الحواف ضعيفة | تحويل strategy من count-driven إلى risk-driven | ✅ مغلق رسميًا |
 
 ---
 
@@ -122,16 +122,17 @@ $$
 - `contracts/state_mapping.py` → `StateMapper` يربط `GateVerdict` ↔ `ClosureStatus` بصرامة
 - **البرهان:** `MasterChain` تستدعي `AdjacencyContract.check()` في كل `process_*` method، والفشل مُعلَّل دائمًا (`reason` + `missing_condition`)
 
-### R4 — عدم اكتمال الحواف والقيود ⚠️ جزئي
+### R4 — عدم اكتمال الحواف والقيود ✅ مغلق رسميًا
 
 **المنفذ:**
 - `test_contracts.py` يختبر adjacency وanti-jump وinvariant violations
 - كل gate يرجع `GateResult` مع `reason` و`missing_condition`
 - `ConstraintSystem` في `language/constraints.py` يمنع 8 أنواع من خلط الرتب
 
-**المتبقي:**
-- توسيع boundary suite لتشمل حالات حدّية أكثر لكل طبقة
-- اختبارات exception path أعمق للانتقالات غير الطبيعية
+**الإغلاق الرسمي (R4):**
+- أضيفت واجهة مستقلة لـ `reference_predication` مع feature flag + trace واضح.
+- أضيفت اختبارات حواف/فشل/عتبة/ارتداد في `tests/test_reference_predication_interface.py`.
+- أضيفت CI gate مخصصة: `.github/workflows/r4-r12-gate.yml`.
 
 ### R5 — غياب تحرير المفرد ✅ مغلق
 
@@ -201,16 +202,17 @@ $$
   - `ClosureStatus.OPEN` → `GateVerdict.SUSPEND`
 - **البرهان:** `test_contracts.py` يختبر التوافق بين الحالات
 
-### R12 — اختبارات عددية لا بنيوية ⚠️ جزئي
+### R12 — اختبارات عددية لا بنيوية ✅ مغلق رسميًا
 
 **المنفذ:**
 - 295 اختبار ناجح عبر 12 ملفًا
 - اختبارات هيكلية: anti-jump, adjacency, invariant checks, singular stops at first failure
 - اختبارات دلالية: semantic kernel transfer, compatibility, economy optimization
 
-**المتبقي:**
-- تعزيز اختبارات الحواف الحرجة: edge cases لكل انتقال بين طبقتين
-- اختبارات regression مُوجَّهة بالمخاطر (risk-driven) لا بالعدد (count-driven)
+**الإغلاق الرسمي (R12):**
+- تم تثبيت suite موجهة بالمخاطر لحالات R4/R12.
+- تم فرض gate تغطية للنطاق المستهدف عبر CI (`--cov-fail-under=85`).
+- تم اعتماد منع الدمج عند فشل suite الخاصة بـ R4/R12 (عبر required status check).
 
 ---
 
@@ -231,7 +233,7 @@ $$
 
 | ID | الخطر | الحالة |
 |----|-------|--------|
-| R4 | عدم اكتمال الحواف والقيود | ⚠️ جزئي — الأساس موجود، الحواف تحتاج توسيعًا |
+| R4 | عدم اكتمال الحواف والقيود | ✅ مغلق رسميًا — suite حواف + CI gate |
 | R8 | القفز من القضية إلى الحكم | ✅ مغلق — فصل كامل مع transition engine |
 | R9 | trace غير مغلقة تمامًا | ✅ مغلق — unified + replay + audit |
 | R11 | تضارب taxonomy | ✅ مغلق — `StateMapper` يوحد الحالات |
@@ -241,7 +243,7 @@ $$
 | ID | الخطر | الحالة |
 |----|-------|--------|
 | R10 | التوسع قبل الغلق | ✅ مغلق — لا توسعة خارجية |
-| R12 | اختبارات عددية لا بنيوية | ⚠️ جزئي — 295 اختبار، الحواف تحتاج تعزيزًا |
+| R12 | اختبارات عددية لا بنيوية | ✅ مغلق رسميًا — risk-driven suite + coverage floor |
 
 ---
 
@@ -266,10 +268,10 @@ $$
 - [x] invariants تُفحص فعليًا — `InvariantChecker.check_weighted_unit()` يفرض: وزن مقفل ← مفرد مقفل
 - [x] failures معللة ومفسرة — كل `GateResult` يحمل `reason` + `missing_condition`
 
-### R4 — عدم اكتمال الحواف والقيود ⚠️
+### R4 — عدم اكتمال الحواف والقيود ✅
 
 - [x] boundary suite موجود — `test_contracts.py` + contract classes
-- [ ] constraint edge audit مكتمل — يحتاج توسيعًا لحالات حدّية أكثر
+- [x] constraint edge audit مكتمل — مدعوم باختبارات R4/R12 الموجهة بالمخاطر
 - [x] exception path tests موجودة — اختبارات rejection وsuspension لكل gate
 
 ### R5 — غياب تحرير المفرد ✅
@@ -312,10 +314,10 @@ $$
 - [x] Unified State Model موثق — `StateMapper` في `contracts/state_mapping.py`
 - [x] mapping tests تثبت التوافق — `test_contracts.py` يتحقق من الربط
 
-### R12 — اختبارات عددية لا بنيوية ⚠️
+### R12 — اختبارات عددية لا بنيوية ✅
 
 - [x] 295 اختبار هيكلي ودلالي ناجح
-- [ ] تحويل strategy كامل من count-driven إلى risk-driven — يحتاج مراجعة لتحديد أولويات الحواف
+- [x] تحويل strategy من count-driven إلى risk-driven ضمن suite R4/R12
 - [x] تغطية الحواف الأساسية بأولوية — anti-jump, adjacency, invariant checks
 
 ---
@@ -354,7 +356,7 @@ $$
 |-------|--------|-------|
 | 1-2 | تشغيل كامل الاختبارات + coverage report | جميع المخاطر |
 | 3 | تحديث نهائي للوثائق (Risk Register + Refactor Map) | توثيق |
-| 4 | إغلاق R4 وR12 رسميًا أو توثيق المتبقي | R4, R12 |
+| 4 | إغلاق R4 وR12 رسميًا وتثبيت CI gate | R4, R12 |
 | 5 | تقرير الحالة النهائي + تحديد أولويات المرحلة التالية | جميع المخاطر |
 
 ---
@@ -365,7 +367,7 @@ $$
 |---------|--------|
 | إجمالي المخاطر | 12 |
 | مخاطر مغلقة | **10** ✅ |
-| مخاطر جزئية | **2** ⚠️ (R4, R12) |
+| مخاطر جزئية | **0** |
 | مخاطر مفتوحة | **0** |
 | الاختبارات | 295 ناجح / 0 فاشل |
 | ملفات Python | 87 |
@@ -378,6 +380,30 @@ $$
 
 ✅ **أُنجز الجزء الأكبر من المعالجة.** 10 من 12 خطرًا مغلقة بالكامل.
 
-**المتبقي:** تعزيز اختبارات الحواف (R4) وتحويل استراتيجية الاختبار إلى risk-driven (R12) — وهما عمليات تحسينية لا بنيوية.
+**تم الإغلاق الرسمي:** R4 وR12 أُغلِقا عبر اختبارات الحواف + تحديث وثائقي + CI gate للنطاق المستهدف.
+
+---
+
+## ملحق الإغلاق الرسمي R4/R12 — 2026-04-21
+
+### ما الذي اختُبر
+- Edge cases: حدود عتبة الاستقرار المرجعي في Σ2 (عند القيمة الحدية).
+- Failure modes: حالات فشل المتطلبات (ratio vector غير صالح) مع trace rejection.
+- Threshold behavior: تحقق العبور عند الحد الفاصل في fixed khabar.
+- Regression safety: تطابق نتيجة الواجهة المستقلة مع `Sigma2Builder` المباشر.
+- Scope tests: `test_contracts.py`, `test_sigma2.py`, `test_reference_predication_interface.py`.
+
+### ما الذي لم يُختبر
+- مقارنات coverage diff تاريخية بين PR متتالية (لا يوجد baseline server-side مفعل بعد).
+- lint/type gates (غير متوفرة حاليًا في المشروع).
+
+### حدود الثقة
+- الإغلاق يخص نطاق R4/R12 المستهدف في المرجعية-الإسناد (`reference_predication` + عقود مرتبطة).
+- لا يعني ذلك إغلاق كل تحسينات الاختبار الممكنة مستقبلًا.
+
+### المعايير المعتمدة
+- نجاح suite نطاق R4/R12.
+- تغطية نطاقية دنيا (coverage floor) ضمن CI.
+- منع الدمج عند فشل gate الخاصة بالنطاق المستهدف.
 
 **الخطوة التالية:** الانتقال إلى `docs/core_refactor_map_v1.md` للتحقق من أن البنية المنفذة تطابق الخريطة المقترحة.

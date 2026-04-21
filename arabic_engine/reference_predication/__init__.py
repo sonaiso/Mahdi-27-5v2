@@ -1,5 +1,9 @@
 """Σ1 -> Σ2 reference-predication models and builders."""
 
+from .interface import (
+    ReferencePredicationInterface,
+    Sigma2InterfaceResult,
+)
 from .models import (
     CaseImpactVector2,
     EgoReferenceMode,
@@ -46,7 +50,9 @@ __all__ = [
     "Sigma1PrerequisiteReport",
     "Sigma1ReferenceUnit",
     "Sigma1Thresholds",
+    "Sigma2InterfaceResult",
     "Sigma2Builder",
+    "ReferencePredicationInterface",
     "SigmaCompatibilityAdapter",
     "Sigma2Matrix",
     "SigmaPrerequisiteChecker",
