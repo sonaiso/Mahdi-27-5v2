@@ -1,17 +1,23 @@
 """Tests for Σ1 -> Σ2 reference-predication transition models."""
 
 from dataclasses import replace
+import warnings
 
 import pytest
 
 from arabic_engine.reference_predication import (
+    GrammaticalFactorGI,
+    GrammaticalRole,
+    LegacySigma1ReferenceUnit,
     MentalFactor,
+    OntologyClass,
     PositionalPotential,
     PredicationType,
     PropositionMode,
     PropositionConstraintVector,
     RatioVector,
     SentenceSpace,
+    SigmaCompatibilityAdapter,
     Sigma1ReferenceUnit,
     Sigma1Thresholds,
     Sigma2Builder,
@@ -84,17 +90,21 @@ def test_sigma1_prerequisite_checker_detects_reference_stability_gap():
 
 
 def test_sigma2_builder_builds_khabar_matrix_defaults():
-    s2 = Sigma2Builder.build(
-        _admissible_sigma1("subj"),
-        _admissible_sigma1("pred"),
-        sentence_space=SentenceSpace.KHABAR,
-        mental_factor=MentalFactor.PRED,
-        grammatical_factor="G_pred",
-        ratios=RatioVector(asnadi=0.8, tadmini=0.1, taqyidi=0.1),
-        proposition_constraint=_cp(),
-    )
+    with warnings.catch_warnings(record=True) as recorded:
+        warnings.simplefilter("always")
+        s2 = Sigma2Builder.build(
+            _admissible_sigma1("subj"),
+            _admissible_sigma1("pred"),
+            sentence_space=SentenceSpace.KHABAR,
+            mental_factor=MentalFactor.PRED,
+            grammatical_factor="G_pred",
+            ratios=RatioVector(asnadi=0.8, tadmini=0.1, taqyidi=0.1),
+            proposition_constraint=_cp(),
+        )
     assert s2.reference_predication.chi is PredicationType.PRED
     assert s2.reference_predication.zeta is PropositionMode.KHABAR
+    assert isinstance(s2.grammatical_factor, GrammaticalFactorGI)
+    assert any(issubclass(w.category, DeprecationWarning) for w in recorded)
 
 
 def test_sigma2_builder_builds_conditional_matrix_defaults():
@@ -119,12 +129,21 @@ def test_sigma2_builder_builds_conditional_matrix_defaults():
     ],
 )
 def test_sigma2_builder_space_mapping(space, chi, zeta):
+    g_i = GrammaticalFactorGI(
+        code="G_i",
+        ontology_anchor=OntologyClass.ENTITY,
+        causality_score=0.8,
+        ego_mode=_admissible_sigma1("x").ego_reference,
+        generality=_admissible_sigma1("x").generality,
+        role=GrammaticalRole.SUBJECT,
+        positional_validity=0.9,
+    )
     s2 = Sigma2Builder.build(
         _admissible_sigma1("a"),
         _admissible_sigma1("b"),
         sentence_space=space,
         mental_factor=MentalFactor.MOD,
-        grammatical_factor="G_i",
+        grammatical_factor=g_i,
         ratios=RatioVector(asnadi=0.6, tadmini=0.2, taqyidi=0.2),
         proposition_constraint=_cp(),
     )
@@ -169,4 +188,97 @@ def test_sigma2_builder_rejects_invalid_ratio_vector():
             grammatical_factor="G_pred",
             ratios=RatioVector(asnadi=0.9, tadmini=0.2, taqyidi=0.1),
             proposition_constraint=_cp(),
+        )
+
+
+def test_legacy_sigma1_adapter_converts_to_expanded_sigma1():
+    legacy = LegacySigma1ReferenceUnit(
+        label="legacy",
+        j_p=0.9,
+        j_m=0.9,
+        j_sigma=0.9,
+        transition_capacity_nu=0.9,
+        reference_variance=0.05,
+        type_potential=TypePotential(noun=0.8, verb=0.2, particle=0.1),
+        positional_potential=PositionalPotential(
+            subject=0.9,
+            predicate=0.8,
+            qualifier=0.4,
+            relator=0.3,
+            transformer=0.2,
+        ),
+        purity_score=0.9,
+    )
+    expanded = SigmaCompatibilityAdapter.legacy_sigma1_to_expanded(legacy)
+    assert isinstance(expanded, Sigma1ReferenceUnit)
+    assert expanded.label == "legacy"
+
+
+def test_sigma2_builder_rejects_when_j_m_fails_explicit_invariant():
+    first = replace(_admissible_sigma1("u1"), j_m=0.1)
+    with pytest.raises(SigmaTransitionError, match="J_m"):
+        Sigma2Builder.build(
+            first,
+            _admissible_sigma1("u2"),
+            sentence_space=SentenceSpace.KHABAR,
+            mental_factor=MentalFactor.PRED,
+            grammatical_factor="G_pred",
+            ratios=RatioVector(asnadi=0.7, tadmini=0.2, taqyidi=0.1),
+            proposition_constraint=_cp(),
+        )
+
+
+def test_sigma2_builder_rejects_inconsistent_structured_gi():
+    invalid_gi = GrammaticalFactorGI(
+        code="G_bad",
+        ontology_anchor=OntologyClass.ENTITY,
+        causality_score=0.5,
+        ego_mode=_admissible_sigma1("x").ego_reference,
+        generality=_admissible_sigma1("x").generality,
+        role=GrammaticalRole.SUBJECT,
+        positional_validity=0.1,
+    )
+    with pytest.raises(SigmaTransitionError, match="positional eligibility"):
+        Sigma2Builder.build(
+            _admissible_sigma1("u1"),
+            _admissible_sigma1("u2"),
+            sentence_space=SentenceSpace.KHABAR,
+            mental_factor=MentalFactor.PRED,
+            grammatical_factor=invalid_gi,
+            ratios=RatioVector(asnadi=0.7, tadmini=0.2, taqyidi=0.1),
+            proposition_constraint=_cp(),
+        )
+
+
+def test_sigma2_builder_rejects_causal_case_contradiction():
+    first = replace(_admissible_sigma1("u1"), causality=0.0)
+    second = replace(_admissible_sigma1("u2"), causality=0.0)
+    with pytest.raises(SigmaTransitionError, match="causal structure"):
+        Sigma2Builder.build(
+            first,
+            second,
+            sentence_space=SentenceSpace.KHABAR,
+            mental_factor=MentalFactor.PRED,
+            grammatical_factor="G_pred",
+            ratios=RatioVector(asnadi=0.7, tadmini=0.2, taqyidi=0.1),
+            proposition_constraint=_cp(),
+            subject_mark="raf",
+            predicate_mark="raf",
+        )
+
+
+def test_sigma2_builder_rejects_unstable_reference_in_fixed_khabar():
+    first = replace(_admissible_sigma1("u1"), reference_variance=0.12)
+    second = replace(_admissible_sigma1("u2"), reference_variance=0.05)
+    with pytest.raises(SigmaTransitionError, match="Unstable reference"):
+        Sigma2Builder.build(
+            first,
+            second,
+            sentence_space=SentenceSpace.KHABAR,
+            mental_factor=MentalFactor.PRED,
+            grammatical_factor="G_pred",
+            ratios=RatioVector(asnadi=0.7, tadmini=0.2, taqyidi=0.1),
+            proposition_constraint=_cp(),
+            subject_mark="raf",
+            predicate_mark="raf",
         )
