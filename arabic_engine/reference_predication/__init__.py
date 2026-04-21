@@ -30,6 +30,10 @@ from .models import (
     SigmaTransitionError,
     TypePotential,
 )
+from .thresholds import (
+    ReferencePredicationThresholdBundle,
+    THRESHOLD_BUNDLE_V1,
+)
 
 __all__ = [
     "CaseImpactVector2",
@@ -58,4 +62,6 @@ __all__ = [
     "SigmaPrerequisiteChecker",
     "SigmaTransitionError",
     "TypePotential",
+    "ReferencePredicationThresholdBundle",
+    "THRESHOLD_BUNDLE_V1",
 ]

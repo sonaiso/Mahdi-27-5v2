@@ -18,17 +18,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Detect R4/R12 scoped changes
+        id: scope
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            r4_r12_scope:
+              - "arabic_engine/reference_predication/**"
+              - "tests/test_sigma2.py"
+              - "tests/test_reference_predication_interface.py"
+              - "tests/test_contracts.py"
+              - "docs/risk_to_test_matrix_v1.md"
+              - "docs/software_architecture_risk_register_v1.md"
+
       - name: Setup Python
+        if: steps.scope.outputs.r4_r12_scope == 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Install dependencies
+        if: steps.scope.outputs.r4_r12_scope == 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
 
       - name: Run R4/R12 required scoped gate (edge + regression + strategy-policy) + coverage floor
+        if: steps.scope.outputs.r4_r12_scope == 'true'
         run: |
           pytest -q \
             tests/test_contracts.py \
@@ -38,3 +54,7 @@ jobs:
             --cov=arabic_engine.reference_predication \
             --cov-report=term-missing \
             --cov-fail-under=85
+
+      - name: Gate skipped (scope not touched)
+        if: steps.scope.outputs.r4_r12_scope != 'true'
+        run: echo "No R4/R12 scoped files changed; gate passes by scope policy."

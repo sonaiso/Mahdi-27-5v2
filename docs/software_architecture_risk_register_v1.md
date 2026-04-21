@@ -411,10 +411,13 @@ $$
 - نجاح suite نطاق R4/R12.
 - تغطية نطاقية دنيا (coverage floor) ضمن CI.
 - منع الدمج عند فشل gate الخاصة بالنطاق المستهدف.
+- اعتماد مصفوفة ربط المخاطر بالاختبارات: `docs/risk_to_test_matrix_v1.md`.
+- اعتماد Threshold Bundle v1 الثابت للدورة: `arabic_engine/reference_predication/thresholds.py`.
 
 ### شرط الحوكمة المتبقي قبل الإغلاق الرسمي
 - توثيق وربط `r4-r12-gate` كـ **required scoped gate** رسميًا على فرع الدمج الرئيسي.
 - تثبيت مرجع القبول الموثق: **Σ1 → G_i → I^(2)** ضمن خطة التنفيذ.
 - إصدار دليل إغلاق رسمي نهائي مع مصادقة حوكمية.
+- منع دمج `reference_predication` في `MasterChain` قبل تحقق: **Risk Closure + Baseline Stability + Contract Safety + Traceability**.
 
 **الخطوة التالية:** الانتقال إلى `docs/core_refactor_map_v1.md` للتحقق من أن البنية المنفذة تطابق الخريطة المقترحة.

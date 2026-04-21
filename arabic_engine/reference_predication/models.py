@@ -13,6 +13,8 @@ from enum import Enum
 from typing import Union
 from warnings import warn
 
+from .thresholds import THRESHOLD_BUNDLE_V1
+
 
 class SentenceSpace(Enum):
     """Sentence-space families in Σ2."""
@@ -168,14 +170,14 @@ class Sigma1ReferenceUnit:
 class Sigma1Thresholds:
     """Threshold bundle for Criterion (3) and Σ1 admission."""
 
-    theta_sigma1: float = 0.70
-    theta_p: float = 0.70
-    theta_m: float = 0.70
-    theta_t: float = 0.55
-    theta_l: float = 0.55
-    theta_purity: float = 0.70
-    theta_nu: float = 0.65
-    epsilon_rho: float = 0.20
+    theta_sigma1: float = THRESHOLD_BUNDLE_V1.theta_sigma1
+    theta_p: float = THRESHOLD_BUNDLE_V1.theta_p
+    theta_m: float = THRESHOLD_BUNDLE_V1.theta_m
+    theta_t: float = THRESHOLD_BUNDLE_V1.theta_t
+    theta_l: float = THRESHOLD_BUNDLE_V1.theta_l
+    theta_purity: float = THRESHOLD_BUNDLE_V1.theta_purity
+    theta_nu: float = THRESHOLD_BUNDLE_V1.theta_nu
+    epsilon_rho: float = THRESHOLD_BUNDLE_V1.epsilon_rho
 
 
 @dataclass(frozen=True)
@@ -280,7 +282,7 @@ class GrammaticalFactorGI:
 
     @property
     def is_positionally_valid(self) -> bool:
-        return self.positional_validity >= 0.55
+        return self.positional_validity >= THRESHOLD_BUNDLE_V1.theta_gi
 
 
 @dataclass(frozen=True)
@@ -546,6 +548,18 @@ class Sigma2Builder:
         ):
             raise SigmaTransitionError(
                 "Case marks contradict the underlying causal structure"
+            )
+        if causal_alignment < THRESHOLD_BUNDLE_V1.theta_i2_causal_alignment:
+            raise SigmaTransitionError(
+                "I^(2) causal alignment failed: "
+                f"{causal_alignment:.3f} < "
+                f"{THRESHOLD_BUNDLE_V1.theta_i2_causal_alignment:.3f}"
+            )
+        if referential_alignment < THRESHOLD_BUNDLE_V1.theta_i2_referential_alignment:
+            raise SigmaTransitionError(
+                "I^(2) referential alignment failed: "
+                f"{referential_alignment:.3f} < "
+                f"{THRESHOLD_BUNDLE_V1.theta_i2_referential_alignment:.3f}"
             )
         strict_khabar_variance_threshold = (
             thresholds.epsilon_rho / Sigma2Builder._KHABAR_STABILITY_FACTOR
