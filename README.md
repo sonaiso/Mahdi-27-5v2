@@ -13,6 +13,7 @@ arabic_engine/
 ├── composition/       # Layer 5: Role distribution (asnadi/tadmini/taqyidi)
 ├── proposition/       # Layer 6: Proposition structure and closure
 ├── communicative/     # Khabar/Insha classification, stylistic closure
+├── reference_predication/ # Σ1→Σ2 reference-predication matrix modeling
 ├── judgement/         # Layer 7: Judgement model, transition, closure
 ├── language/          # Layer 9: Transcendental container (Lang_tr)
 ├── trace/             # Unified trace, replay, audit
