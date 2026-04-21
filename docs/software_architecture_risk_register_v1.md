@@ -394,7 +394,7 @@ $$
 - Scope tests: `test_contracts.py`, `test_sigma2.py`, `test_reference_predication_interface.py`.
 
 ### ما الذي لم يُختبر
-- مقارنات coverage diff تاريخية بين PR متتالية (لا يوجد baseline server-side مفعل بعد).
+- مقارنات coverage diff تاريخية بين PR متتالية (لا يوجد baseline server-side مُفعَّل بعد).
 - lint/type gates (غير متوفرة حاليًا في المشروع).
 
 ### حدود الثقة

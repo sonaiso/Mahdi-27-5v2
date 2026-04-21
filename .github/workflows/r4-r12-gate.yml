@@ -12,6 +12,8 @@ jobs:
   r4_r12_gate:
     name: r4-r12-gate
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
