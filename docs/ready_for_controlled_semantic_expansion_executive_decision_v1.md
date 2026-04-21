@@ -11,15 +11,15 @@
    - مع Feature Flag  
    - ومع Trace واضح
 
-2. **إغلاق R4 وR12 رسميًا مشروط بثلاثة عناصر معًا**  
+2. **R4 وR12 مخففان تقنيًا ومفتوحان حوكميًا حتى اكتمال الإغلاق الرسمي**  
    - اختبارات الحواف والمخاطر  
    - تحديث وثائقي صريح  
-   - CI Gate للنطاق المستهدف
+   - CI Gate للنطاق المستهدف كـ required scoped gate
 
 3. **تصنيف النوى الرسمي (بالترتيب المعتمد)**  
    - Language → **Core**  
    - Qiyas → **Core**  
-   - Semantic Kernel → **Extension / Transitional Core Review**
+   - Semantic Kernel → **Transitional**
 
 4. **ترتيب baseline المرجعي-الإسنادي**  
    - Σ1 → G_i → I^(2)  
@@ -40,15 +40,15 @@
 - المعايير المعتمدة
 
 ### ج) CI Gate
-- نجاح suite المطلوبة
+- نجاح suite المحددة للنطاق
 - عدم تراجع التغطية في النطاق المستهدف (via coverage floor)
-- منع الدمج عند فشل suite الخاصة بـ R4/R12
+- منع الدمج عند فشل suite الخاصة بـ R4/R12 (required scoped status check)
 - lint/type checks: غير متوفرة حاليًا في المشروع
 
 ## 3) تعريف النجاح في هذه الدورة
 
-- R4 = Closed (رسميًا)
-- R12 = Closed (رسميًا)
+- R4 = Technically mitigated, governance-open pending formal evidence closure
+- R12 = Technically mitigated, governance-open pending formal evidence closure
 - `reference_predication` = مستقلة + واجهة ثابتة + Feature Flag + Trace
 - تصنيف Language/Qiyas/Semantic Kernel = موثق ومعتمد
 - جاهزية انتقال منضبط إلى التوسعة الدلالية
