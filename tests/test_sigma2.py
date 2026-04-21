@@ -23,6 +23,7 @@ from arabic_engine.reference_predication import (
     Sigma2Builder,
     SigmaPrerequisiteChecker,
     SigmaTransitionError,
+    THRESHOLD_BUNDLE_V1,
     TypePotential,
 )
 
@@ -285,4 +286,31 @@ def test_sigma2_builder_rejects_unstable_reference_in_fixed_khabar():
             proposition_constraint=_cp(),
             subject_mark="raf",
             predicate_mark="raf",
+        )
+
+
+def test_sigma2_threshold_bundle_v1_is_locked_for_cycle():
+    assert THRESHOLD_BUNDLE_V1.theta_sigma1 == 0.70
+    assert THRESHOLD_BUNDLE_V1.theta_p == 0.70
+    assert THRESHOLD_BUNDLE_V1.theta_m == 0.70
+    assert THRESHOLD_BUNDLE_V1.theta_t == 0.55
+    assert THRESHOLD_BUNDLE_V1.theta_l == 0.55
+    assert THRESHOLD_BUNDLE_V1.theta_purity == 0.70
+    assert THRESHOLD_BUNDLE_V1.theta_nu == 0.65
+    assert THRESHOLD_BUNDLE_V1.epsilon_rho == 0.20
+    assert THRESHOLD_BUNDLE_V1.theta_gi == 0.60
+
+
+def test_sigma2_builder_rejects_referential_alignment_failure():
+    first = replace(_admissible_sigma1("u1"), association=0.0)
+    second = replace(_admissible_sigma1("u2"), association=1.0)
+    with pytest.raises(SigmaTransitionError, match="referential alignment"):
+        Sigma2Builder.build(
+            first,
+            second,
+            sentence_space=SentenceSpace.COND,
+            mental_factor=MentalFactor.COND,
+            grammatical_factor="G_cond",
+            ratios=RatioVector(asnadi=0.7, tadmini=0.2, taqyidi=0.1),
+            proposition_constraint=_cp(),
         )

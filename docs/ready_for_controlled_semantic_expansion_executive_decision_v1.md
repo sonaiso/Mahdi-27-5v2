@@ -52,3 +52,32 @@
 - `reference_predication` = مستقلة + واجهة ثابتة + Feature Flag + Trace
 - تصنيف Language/Qiyas/Semantic Kernel = موثق ومعتمد
 - جاهزية انتقال منضبط إلى التوسعة الدلالية
+
+## 4) ملحق القرارات الحاسمة قبل التنفيذ
+
+1. **`r4-r12-gate` بوابة مستقلة ومطلوبة على فرع الدمج الرئيسي**  
+   - أي PR يمس نطاق: `arabic_engine/reference_predication/**` أو `tests/test_sigma2.py` أو وحدات العتبات أو اختبارات المخاطر لا يُقبل إلا بعد نجاح البوابة.
+   - التفعيل الحوكمـي يتم عبر Branch Protection/Ruleset بتعيين check: `r4-r12-gate` كـ required.
+
+2. **صيغة رسمية ثابتة لمصفوفة ربط المخاطر بالاختبارات**  
+   - المرجع الرسمي: `docs/risk_to_test_matrix_v1.md`
+   - الأعمدة المعتمدة:  
+     `Risk ID | Scope | Required Tests | Failure Modes Covered | Acceptance Criteria | Gate`
+
+3. **جدول إنهاء `grammatical_factor` النصي legacy**  
+   - الدورة الحالية: قبول legacy + تحويل داخلي + warning.  
+   - الدورة التالية: منع أي استخدام داخلي مباشر للـ string form.  
+   - نهاية الدورة التالية: منعه من الواجهة العامة إلا بطبقة adapter صريحة.  
+   - بعد ذلك: إزالة الدعم القديم.  
+   - **القاعدة المختصرة:** نافذة توافق = إصدار واحد كامل + دورة إزالة واحدة.
+
+4. **اعتماد Threshold Bundle v1 قبل التطوير وعدم تغييره داخل الدورة**  
+   - المرجع التنفيذي: `arabic_engine/reference_predication/thresholds.py`
+   - الحالة: **v1 locked for this cycle**
+
+5. **معيار المبرر التنفيذي الكافي لدمج `reference_predication` داخل `MasterChain`**  
+   - لا دمج قبل تحقق الشروط الأربعة معًا:
+     - Risk Closure
+     - Baseline Stability
+     - Contract Safety
+     - Traceability
