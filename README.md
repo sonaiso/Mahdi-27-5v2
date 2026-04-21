@@ -50,6 +50,15 @@ pip install -e ".[dev]"
 pytest tests/ -v
 ```
 
+## Reference-Predication Baseline (Independent)
+
+`reference_predication` is intentionally kept independent from `MasterChain` in this phase.
+Use the stable interface `ReferencePredicationInterface` with feature flag:
+
+```bash
+export ARABIC_ENGINE_ENABLE_REFERENCE_PREDICATION=true
+```
+
 ## Intellectual Leadership
 
 - **al-Nabhani**: cognitive ordering, conception, subject liberation, judgement, anti-jump logic
