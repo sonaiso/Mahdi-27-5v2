@@ -28,8 +28,8 @@ jobs:
               - "tests/test_sigma2.py"
               - "tests/test_reference_predication_interface.py"
               - "tests/test_contracts.py"
-              - "docs/risk_to_test_matrix_v1.md"
-              - "docs/software_architecture_risk_register_v1.md"
+              - "docs/risks/risk-to-test-matrix_v1.md"
+              - "docs/risks/software-architecture-risk-register_v1.md"
 
       - name: Setup Python
         if: steps.scope.outputs.r4_r12_scope == 'true'

@@ -1,7 +1,7 @@
 # خريطة إعادة تشكيل القلب v1
 ## Core Refactor Map v1
 
-> **Repository Path:** `docs/core_refactor_map_v1.md`
+> **Repository Path:** `docs/roadmap/core-refactor-map_v1.md`
 > **آخر تحديث:** 2026-04-20
 > **حالة المشروع:** 295 اختبار ناجح — 87 ملف Python — 14 موديول — 7,368 سطر
 
@@ -68,10 +68,10 @@
 
 يبقى ويصبح مرجعًا للتصميم:
 
-- `docs/software_architecture_risk_register_v1.md` — سجل المخاطر (هذه الوثيقة الشقيقة)
-- `docs/semantic_kernel_architecture_v1.md` — معمارية الحمولة الدلالية
-- `docs/language_transcendental_container_v1.md` — الوعاء الترنسندنتالي
-- `docs/weight_and_mizan_fractal_constitution_v1.md` — دستور الوزن والميزان
+- `docs/risks/software-architecture-risk-register_v1.md` — سجل المخاطر (هذه الوثيقة الشقيقة)
+- `docs/architecture/semantic-kernel_architecture_v1.md` — معمارية الحمولة الدلالية
+- `docs/foundations/language-transcendental-container_foundation_v1.md` — الوعاء الترنسندنتالي
+- `docs/foundations/weight-and-mizan-constitution_v1.md` — دستور الوزن والميزان
 
 ### 3. النماذج المفيدة الحالية ✅
 
