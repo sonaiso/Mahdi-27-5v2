@@ -17,7 +17,12 @@ from arabic_engine.core.types_semantic import (
 from arabic_engine.core.types_weight import WeightRecord, WeightedUnit
 from arabic_engine.judgement.closure import JudgementClosureEngine
 from arabic_engine.judgement.transition import JudgementTransitionEngine
+from arabic_engine.semantic_kernel.compatibility import CompatibilityChecker
 from arabic_engine.semantic_kernel.transfer import SemanticTransferEngine
+
+ROOT_VECTOR_DIM = 13
+PATTERN_VECTOR_DIM = 12
+FORM_VECTOR_DIM = 9
 
 
 def _weighted_with_output_dim(values: tuple[float, ...]) -> WeightedUnit:
@@ -26,12 +31,14 @@ def _weighted_with_output_dim(values: tuple[float, ...]) -> WeightedUnit:
 
 
 def _minimal_transfer_inputs() -> tuple[RootSemanticKernel, PatternSemanticTransform, FormSemanticProfile]:
-    root = RootSemanticKernel(semantic_vector=SemanticVector(values=tuple(1.0 for _ in range(13))))
+    root = RootSemanticKernel(
+        semantic_vector=SemanticVector(values=tuple(1.0 for _ in range(ROOT_VECTOR_DIM)))
+    )
     pattern = PatternSemanticTransform(
-        semantic_transform_vector=SemanticVector(values=tuple(1.0 for _ in range(12)))
+        semantic_transform_vector=SemanticVector(values=tuple(1.0 for _ in range(PATTERN_VECTOR_DIM)))
     )
     form = FormSemanticProfile(
-        form_semantic_vector=SemanticVector(values=tuple(1.0 for _ in range(9)))
+        form_semantic_vector=SemanticVector(values=tuple(1.0 for _ in range(FORM_VECTOR_DIM)))
     )
     return root, pattern, form
 
@@ -79,7 +86,7 @@ def test_judgement_closure_sets_blocked_on_reject(monkeypatch):
     assert judgement.closure is ClosureStatus.BLOCKED
 
 
-def test_composition_semantic_compatibility_is_one_for_zero_dim_outputs():
+def test_composition_semantic_compatibility_returns_one_for_zero_dim_outputs():
     relation = CompositionRelation(
         kind=RelationKind.ASNADI,
         roles=[
@@ -91,7 +98,7 @@ def test_composition_semantic_compatibility_is_one_for_zero_dim_outputs():
     assert relation.semantic_compatibility_score == 1.0
 
 
-def test_composition_semantic_compatibility_is_partial_on_dim_mismatch():
+def test_composition_semantic_compatibility_returns_half_score_on_dim_mismatch():
     relation = CompositionRelation(
         kind=RelationKind.ASNADI,
         roles=[
@@ -106,8 +113,9 @@ def test_composition_semantic_compatibility_is_partial_on_dim_mismatch():
 def test_transfer_maps_partial_compatibility_to_half_score(monkeypatch):
     root, pattern, form = _minimal_transfer_inputs()
     monkeypatch.setattr(
-        "arabic_engine.semantic_kernel.transfer.CompatibilityChecker.check_root_pattern",
-        lambda *_args, **_kwargs: CompatibilityStatus.PARTIAL,
+        CompatibilityChecker,
+        "check_root_pattern",
+        staticmethod(lambda *_args, **_kwargs: CompatibilityStatus.PARTIAL),
     )
 
     result = SemanticTransferEngine.transfer(root, pattern, form)
@@ -118,8 +126,9 @@ def test_transfer_maps_partial_compatibility_to_half_score(monkeypatch):
 def test_transfer_maps_incompatible_to_zero_score(monkeypatch):
     root, pattern, form = _minimal_transfer_inputs()
     monkeypatch.setattr(
-        "arabic_engine.semantic_kernel.transfer.CompatibilityChecker.check_root_pattern",
-        lambda *_args, **_kwargs: CompatibilityStatus.INCOMPATIBLE,
+        CompatibilityChecker,
+        "check_root_pattern",
+        staticmethod(lambda *_args, **_kwargs: CompatibilityStatus.INCOMPATIBLE),
     )
 
     result = SemanticTransferEngine.transfer(root, pattern, form)
