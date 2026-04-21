@@ -25,7 +25,6 @@ jobs:
           filters: |
             r4_r12_scope:
               - "arabic_engine/reference_predication/**"
-              - "arabic_engine/**/threshold*.py"
               - "tests/test_sigma2.py"
               - "tests/test_reference_predication_interface.py"
               - "tests/test_contracts.py"

@@ -299,6 +299,8 @@ def test_sigma2_threshold_bundle_v1_is_locked_for_cycle():
     assert THRESHOLD_BUNDLE_V1.theta_nu == 0.65
     assert THRESHOLD_BUNDLE_V1.epsilon_rho == 0.20
     assert THRESHOLD_BUNDLE_V1.theta_gi == 0.60
+    assert THRESHOLD_BUNDLE_V1.theta_i2_causal_alignment == 0.50
+    assert THRESHOLD_BUNDLE_V1.theta_i2_referential_alignment == 0.50
 
 
 def test_sigma2_builder_rejects_referential_alignment_failure():

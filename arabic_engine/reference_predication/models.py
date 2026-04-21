@@ -549,19 +549,17 @@ class Sigma2Builder:
             raise SigmaTransitionError(
                 "Case marks contradict the underlying causal structure"
             )
-        if (
-            causal_alignment
-            < THRESHOLD_BUNDLE_V1.theta_i2_causal_alignment
-        ):
+        if causal_alignment < THRESHOLD_BUNDLE_V1.theta_i2_causal_alignment:
             raise SigmaTransitionError(
-                "I^(2) causal alignment failed"
+                "I^(2) causal alignment failed: "
+                f"{causal_alignment:.3f} < "
+                f"{THRESHOLD_BUNDLE_V1.theta_i2_causal_alignment:.3f}"
             )
-        if (
-            referential_alignment
-            < THRESHOLD_BUNDLE_V1.theta_i2_referential_alignment
-        ):
+        if referential_alignment < THRESHOLD_BUNDLE_V1.theta_i2_referential_alignment:
             raise SigmaTransitionError(
-                "I^(2) referential alignment failed"
+                "I^(2) referential alignment failed: "
+                f"{referential_alignment:.3f} < "
+                f"{THRESHOLD_BUNDLE_V1.theta_i2_referential_alignment:.3f}"
             )
         strict_khabar_variance_threshold = (
             thresholds.epsilon_rho / Sigma2Builder._KHABAR_STABILITY_FACTOR

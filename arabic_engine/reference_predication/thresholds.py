@@ -18,7 +18,9 @@ class ReferencePredicationThresholdBundle:
     theta_nu: float = 0.65
     epsilon_rho: float = 0.20
     theta_gi: float = 0.60
+    # Minimum causal consistency accepted for I^(2) projection.
     theta_i2_causal_alignment: float = 0.50
+    # Minimum referential consistency accepted for I^(2) projection.
     theta_i2_referential_alignment: float = 0.50
 
 
