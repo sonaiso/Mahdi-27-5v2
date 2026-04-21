@@ -38,3 +38,4 @@ from .context import ContextDeltaBuilder, ContextFeatures  # noqa: F401
 from .weight_scheduler import WeightScheduler, BlendingWeights  # noqa: F401
 from .phonotactics import PhonotacticChecker, RootType  # noqa: F401
 from .metrics import TransferMetrics  # noqa: F401
+from .foundational_hook import SemanticKernelFoundationalAdapter  # noqa: F401
