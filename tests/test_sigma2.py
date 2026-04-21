@@ -105,6 +105,10 @@ def test_sigma2_builder_builds_khabar_matrix_defaults():
     assert s2.reference_predication.zeta is PropositionMode.KHABAR
     assert isinstance(s2.grammatical_factor, GrammaticalFactorGI)
     assert any(issubclass(w.category, DeprecationWarning) for w in recorded)
+    assert any(
+        "Passing string grammatical_factor is deprecated" in str(w.message)
+        for w in recorded
+    )
 
 
 def test_sigma2_builder_builds_conditional_matrix_defaults():

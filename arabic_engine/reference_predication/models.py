@@ -376,6 +376,10 @@ class SigmaCompatibilityAdapter:
         return unit.positional_potential.transformer
 
     @staticmethod
+    def _clamp(value: float) -> float:
+        return max(0.0, min(1.0, value))
+
+    @staticmethod
     def legacy_grammatical_factor_to_gi(
         legacy_grammatical_factor: str,
         first: Sigma1ReferenceUnit,
@@ -386,10 +390,13 @@ class SigmaCompatibilityAdapter:
             SigmaCompatibilityAdapter._role_score(first, role),
             SigmaCompatibilityAdapter._role_score(second, role),
         )
+        causality_score = SigmaCompatibilityAdapter._clamp(
+            (first.causality + second.causality) / 2.0
+        )
         return GrammaticalFactorGI(
             code=legacy_grammatical_factor,
             ontology_anchor=first.ontology,
-            causality_score=Sigma2Builder._clamp((first.causality + second.causality) / 2.0),
+            causality_score=causality_score,
             ego_mode=first.ego_reference,
             generality=first.generality,
             role=role,
@@ -425,6 +432,9 @@ class Sigma2Builder:
         SentenceSpace.NASKH: (PredicationType.NASKH, PropositionMode.KHABAR),
         SentenceSpace.INSHA: (PredicationType.INSHA, PropositionMode.INSHA),
     }
+    # Fixed khabari predication is stricter than baseline Σ1 and halves the allowed
+    # reference variance window (epsilon_rho / 2.0) to reduce referential drift.
+    _KHABAR_STABILITY_FACTOR: float = 2.0
 
     @staticmethod
     def _clamp(value: float, low: float = 0.0, high: float = 1.0) -> float:
@@ -470,7 +480,15 @@ class Sigma2Builder:
         first_report = SigmaPrerequisiteChecker.evaluate(first, thresholds)
         second_report = SigmaPrerequisiteChecker.evaluate(second, thresholds)
         if not first_report.passes_j_m or not second_report.passes_j_m:
-            raise SigmaTransitionError("Cannot build Σ2 when J_m prerequisite fails")
+            failing_units = []
+            if not first_report.passes_j_m:
+                failing_units.append(first.label)
+            if not second_report.passes_j_m:
+                failing_units.append(second.label)
+            raise SigmaTransitionError(
+                "Cannot build Σ2 when J_m prerequisite fails for: "
+                + ", ".join(failing_units)
+            )
 
         if not first_report.is_admissible:
             raise SigmaTransitionError(
@@ -506,19 +524,19 @@ class Sigma2Builder:
             varsigma=varsigma,
         )
 
+        average_j_m = (first.j_m + second.j_m) / 2.0
+        average_causality = (first.causality + second.causality) / 2.0
+        average_reference_variance = (
+            first.reference_variance + second.reference_variance
+        ) / 2.0
+        association_delta = abs(first.association - second.association)
+
         causal_alignment = Sigma2Builder._clamp(
-            (first.j_m + second.j_m + first.causality + second.causality) / 4.0
+            (average_j_m + average_causality) / 2.0
         )
         referential_alignment = Sigma2Builder._clamp(
             1.0
-            - (
-                (
-                    first.reference_variance
-                    + second.reference_variance
-                    + abs(first.association - second.association)
-                )
-                / 3.0
-            ),
+            - ((average_reference_variance + association_delta) / 2.0),
         )
         if not Sigma2Builder._case_marks_are_causally_consistent(
             causal_alignment=causal_alignment,
@@ -529,13 +547,16 @@ class Sigma2Builder:
             raise SigmaTransitionError(
                 "Case marks contradict the underlying causal structure"
             )
+        strict_khabar_variance_threshold = (
+            thresholds.epsilon_rho / Sigma2Builder._KHABAR_STABILITY_FACTOR
+        )
         if (
             sentence_space is SentenceSpace.KHABAR
             and subject_mark == "raf"
             and predicate_mark == "raf"
             and (
-                first.reference_variance > thresholds.epsilon_rho / 2.0
-                or second.reference_variance > thresholds.epsilon_rho / 2.0
+                first.reference_variance > strict_khabar_variance_threshold
+                or second.reference_variance > strict_khabar_variance_threshold
             )
         ):
             raise SigmaTransitionError(
@@ -548,11 +569,10 @@ class Sigma2Builder:
             causal_alignment=causal_alignment,
             referential_alignment=referential_alignment,
             grammatical_factor_code=g_i.code,
-            causal_trace=f"jm:{(first.j_m + second.j_m)/2.0:.3f}|c:{(first.causality + second.causality)/2.0:.3f}",
-            referential_trace=(
-                f"var:{(first.reference_variance + second.reference_variance)/2.0:.3f}"
-                f"|assoc_delta:{abs(first.association - second.association):.3f}"
+            causal_trace=(
+                f"j_m_avg:{average_j_m:.3f}|causality_avg:{average_causality:.3f}"
             ),
+            referential_trace=f"reference_variance_avg:{average_reference_variance:.3f}|association_delta:{association_delta:.3f}",
         )
 
         return Sigma2Matrix(
