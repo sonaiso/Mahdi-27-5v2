@@ -1,7 +1,7 @@
 # سجل مخاطر المعمارية البرمجية v1
 ## Software Architecture Risk Register v1
 
-> **Repository Path:** `docs/software_architecture_risk_register_v1.md`
+> **Repository Path:** `docs/risks/software-architecture-risk-register_v1.md`
 > **آخر تحديث:** 2026-04-20
 > **حالة المشروع:** 295 اختبار ناجح — 0 فاشل — 87 ملف Python — 7,368 سطر كود
 
@@ -411,7 +411,7 @@ $$
 - نجاح suite نطاق R4/R12.
 - تغطية نطاقية دنيا (coverage floor) ضمن CI.
 - منع الدمج عند فشل gate الخاصة بالنطاق المستهدف.
-- اعتماد مصفوفة ربط المخاطر بالاختبارات: `docs/risk_to_test_matrix_v1.md`.
+- اعتماد مصفوفة ربط المخاطر بالاختبارات: `docs/risks/risk-to-test-matrix_v1.md`.
 - اعتماد Threshold Bundle v1 الثابت للدورة: `arabic_engine/reference_predication/thresholds.py`.
 
 ### شرط الحوكمة المتبقي قبل الإغلاق الرسمي
@@ -420,4 +420,4 @@ $$
 - إصدار دليل إغلاق رسمي نهائي مع مصادقة حوكمية.
 - منع دمج `reference_predication` في `MasterChain` قبل تحقق: **Risk Closure + Baseline Stability + Contract Safety + Traceability**.
 
-**الخطوة التالية:** الانتقال إلى `docs/core_refactor_map_v1.md` للتحقق من أن البنية المنفذة تطابق الخريطة المقترحة.
+**الخطوة التالية:** الانتقال إلى `docs/roadmap/core-refactor-map_v1.md` للتحقق من أن البنية المنفذة تطابق الخريطة المقترحة.

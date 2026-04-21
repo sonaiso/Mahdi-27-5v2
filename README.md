@@ -74,7 +74,7 @@ computable semantic vectors and transports meaning through pattern and form:
 K_F = W_r · r_sem + W_p · p_sem + W_f · f_sem + Δ_ctx
 ```
 
-See [`docs/semantic_kernel_architecture_v1.md`](docs/semantic_kernel_architecture_v1.md)
+See [`docs/architecture/semantic-kernel_architecture_v1.md`](docs/architecture/semantic-kernel_architecture_v1.md)
 for the full mathematical specification.
 
 ## Language as Transcendental Container (Lang_tr)
@@ -93,5 +93,5 @@ Lang_tr = ⟨Lexicon, CategorySystem, PredicationRules,
           ConstraintSystem, ReferenceSystem, TestabilityInterface⟩
 ```
 
-See [`docs/language_transcendental_container_v1.md`](docs/language_transcendental_container_v1.md)
+See [`docs/foundations/language-transcendental-container_foundation_v1.md`](docs/foundations/language-transcendental-container_foundation_v1.md)
 for the full specification.

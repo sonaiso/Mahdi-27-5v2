@@ -60,7 +60,7 @@
    - التفعيل الحوكمـي يتم عبر Branch Protection/Ruleset بتعيين check: `r4-r12-gate` كـ required.
 
 2. **صيغة رسمية ثابتة لمصفوفة ربط المخاطر بالاختبارات**  
-   - المرجع الرسمي: `docs/risk_to_test_matrix_v1.md`
+   - المرجع الرسمي: `docs/risks/risk-to-test-matrix_v1.md`
    - الأعمدة المعتمدة:  
      `Risk ID | Scope | Required Tests | Failure Modes Covered | Acceptance Criteria | Gate`
 
