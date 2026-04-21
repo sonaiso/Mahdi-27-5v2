@@ -73,7 +73,7 @@ $$
 | R1 | تضخم `core` | تراكم enums/types/contracts/traces في مركز واحد حتى يفقد وضوحه الدلالي | 3 | 3 | 9 حرج | صعوبة التتبع، تكرار الأسماء، تضارب state models | تقسيم `core` إلى نوى فرعية بحسب النطاق | ✅ مغلق |
 | R2 | تعدد السلاسل | وجود أكثر من pipeline/chain/runtime path بلا Master Chain واضحة | 3 | 3 | 9 حرج | اختلاف معاني النجاح/الفشل/التعليق، trace متعددة | تعريف سلسلة سيادية واحدة، وتحويل البقية إلى adapters أو projections | ✅ مغلق |
 | R3 | فجوة تطبيق العقود | وجود contracts أقوى من التنفيذ الفعلي | 3 | 3 | 9 حرج | YAML غني لكن enforcement جزئي، mismatch غير مكتشف | تفعيل adjacency + invariants + runtime enforcement | ✅ مغلق |
-| R4 | عدم اكتمال الحواف والقيود | build_constraint_edges / validators / edge cases غير مغلقة | 3 | 3 | 9 حرج | نتائج صحيحة مركزيًا لكن غير ثابتة حدّيًا | بناء boundary suite + constraint edge audit + exception path tests | ⚠️ مخفف تقنيًا، ومفتوح حوكميًا (بانتظار أدلة إغلاق رسمية) |
+| R4 | عدم اكتمال الحواف والقيود | build_constraint_edges / validators / edge cases غير مغلقة | 3 | 3 | 9 حرج | نتائج صحيحة مركزيًا لكن غير ثابتة حدّيًا | بناء boundary suite + constraint edge audit + exception path tests | ⚠️ مخفف تقنيًا / مفتوح حوكميًا |
 | R5 | غياب تحرير المفرد | خلط التصور المفرد والمعلومة المفردة والمفهوم المفرد | 3 | 3 | 9 حرج | القفز من unicode إلى التركيب أو المفهوم | إنشاء `singular/` كنواة مستقلة بثلاث طبقات closure | ✅ مغلق |
 | R6 | غياب رتبة الوزن | الوزن يعامل كطبقة صرفية لا كشرط إمكان بنيوي | 3 | 3 | 9 حرج | فساد الاشتقاق، اضطراب built/inflected, noun/verb/particle legality | إنشاء `weight/` كنواة سيادية قبل composition | ✅ مغلق |
 | R7 | خلط التركيب بالتعيين | التركيب يعامل كتجميع أو parsing لا كتوزيع أدوار | 3 | 3 | 9 حرج | syntax labels بلا role-distribution semantics | إنشاء `composition/roles` + `relations/asnadi,tadmini,taqyidi` | ✅ مغلق |
@@ -81,7 +81,7 @@ $$
 | R9 | trace غير مغلقة تمامًا | replay / hash / evidence / edge cases غير مكتملة | 2 | 3 | 6 حرج | mismatch غير مفسر، replay جزئي أو هش | توحيد trace model + replay tests + failure semantics | ✅ مغلق |
 | R10 | التوسع قبل الغلق | API/DB/AI integration قبل إغلاق القلب الرمزي | 3 | 2 | 6 حرج | أعمال كثيرة outward-facing مع قلب غير ثابت | منع أي توسعة تشغيلية قبل إغلاق singular + weight + composition + judgement | ✅ مغلق |
 | R11 | تضارب taxonomy | تعدد مفاهيم الحالة والقرار والانتقال دون mapping صارم | 2 | 3 | 6 حرج | SUSPEND/REJECT/INVALID/PENDING... بلا ربط واضح | Unified State Model + mapping tests | ✅ مغلق |
-| R12 | اختبارات عددية لا بنيوية | كثرة الاختبارات مع ضعف نسبي في النقاط الحرجة | 2 | 3 | 6 حرج | coverage مقبولة لكن الحواف ضعيفة | تحويل strategy من count-driven إلى risk-driven | ⚠️ مخفف تقنيًا، ومفتوح حوكميًا (بانتظار أدلة إغلاق رسمية) |
+| R12 | اختبارات عددية لا بنيوية | كثرة الاختبارات مع ضعف نسبي في النقاط الحرجة | 2 | 3 | 6 حرج | coverage مقبولة لكن الحواف ضعيفة | تحويل strategy من count-driven إلى risk-driven | ⚠️ مخفف تقنيًا / مفتوح حوكميًا |
 
 ---
 
