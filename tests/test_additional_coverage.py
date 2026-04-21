@@ -20,9 +20,10 @@ from arabic_engine.core.types_singular import (
 )
 from arabic_engine.core.types_weight import WeightRecord, WeightedUnit
 from arabic_engine.core.types_judgement import Judgement, Proposition
+from arabic_engine.core.types_composition import CompositionRelation
 
 
-def _make_weighted(closed: bool = True) -> WeightedUnit:
+def _make_weighted_unit(closed: bool = True) -> WeightedUnit:
     status = ClosureStatus.CLOSED if closed else ClosureStatus.OPEN
     singular = SingularUnit(
         pre_u0=PreU0(closure=status),
@@ -35,7 +36,7 @@ def _make_weighted(closed: bool = True) -> WeightedUnit:
 
 
 def test_tadmini_builder_builds_closed_relation_with_default_hal_role():
-    relation, results = TadminiRelationBuilder.build(_make_weighted(), _make_weighted())
+    relation, results = TadminiRelationBuilder.build(_make_weighted_unit(), _make_weighted_unit())
 
     assert relation is not None
     assert all(r.passed for r in results)
@@ -45,7 +46,7 @@ def test_tadmini_builder_builds_closed_relation_with_default_hal_role():
 
 
 def test_tadmini_builder_returns_none_when_contained_unit_is_unclosed():
-    relation, results = TadminiRelationBuilder.build(_make_weighted(), _make_weighted(closed=False))
+    relation, results = TadminiRelationBuilder.build(_make_weighted_unit(), _make_weighted_unit(closed=False))
 
     assert relation is None
     assert len(results) == 2
@@ -54,7 +55,7 @@ def test_tadmini_builder_returns_none_when_contained_unit_is_unclosed():
 
 
 def test_taqyidi_idafa_builder_assigns_mudaf_and_mudaf_ilayh_roles():
-    relation, results = TaqyidiRelationBuilder.build_idafa(_make_weighted(), _make_weighted())
+    relation, results = TaqyidiRelationBuilder.build_idafa(_make_weighted_unit(), _make_weighted_unit())
 
     assert relation is not None
     assert all(r.passed for r in results)
@@ -64,7 +65,7 @@ def test_taqyidi_idafa_builder_assigns_mudaf_and_mudaf_ilayh_roles():
 
 
 def test_taqyidi_sifa_builder_assigns_mawsuf_and_sifa_roles():
-    relation, results = TaqyidiRelationBuilder.build_sifa(_make_weighted(), _make_weighted())
+    relation, results = TaqyidiRelationBuilder.build_sifa(_make_weighted_unit(), _make_weighted_unit())
 
     assert relation is not None
     assert all(r.passed for r in results)
@@ -74,7 +75,7 @@ def test_taqyidi_sifa_builder_assigns_mawsuf_and_sifa_roles():
 
 
 def test_taqyidi_sifa_builder_returns_none_if_first_unit_invalid():
-    relation, results = TaqyidiRelationBuilder.build_sifa(_make_weighted(closed=False), _make_weighted())
+    relation, results = TaqyidiRelationBuilder.build_sifa(_make_weighted_unit(closed=False), _make_weighted_unit())
 
     assert relation is None
     assert len(results) == 1
@@ -82,13 +83,19 @@ def test_taqyidi_sifa_builder_returns_none_if_first_unit_invalid():
 
 
 def test_proposition_closure_passes_for_closed_non_empty_proposition():
-    prop = Proposition(relations=[object()], closure=ClosureStatus.CLOSED)
+    prop = Proposition(
+        relations=[CompositionRelation(kind=RelationKind.ASNADI)],
+        closure=ClosureStatus.CLOSED,
+    )
     result = PropositionClosureEngine.evaluate(prop)
     assert result.passed
 
 
 def test_proposition_closure_rejects_open_or_empty_proposition():
-    open_prop = Proposition(relations=[object()], closure=ClosureStatus.OPEN)
+    open_prop = Proposition(
+        relations=[CompositionRelation(kind=RelationKind.ASNADI)],
+        closure=ClosureStatus.OPEN,
+    )
     empty_prop = Proposition(relations=[], closure=ClosureStatus.CLOSED)
 
     open_result = PropositionClosureEngine.evaluate(open_prop)
@@ -101,7 +108,10 @@ def test_proposition_closure_rejects_open_or_empty_proposition():
 
 
 def test_judgement_transition_covers_all_failure_branches_and_pass():
-    base_closed_prop = Proposition(relations=[object()], closure=ClosureStatus.CLOSED)
+    base_closed_prop = Proposition(
+        relations=[CompositionRelation(kind=RelationKind.ASNADI)],
+        closure=ClosureStatus.CLOSED,
+    )
 
     no_prop = Judgement()
     open_prop = Judgement(proposition=Proposition(closure=ClosureStatus.OPEN))
