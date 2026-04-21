@@ -2,7 +2,13 @@
 
 from .models import (
     CaseImpactVector2,
+    EgoReferenceMode,
+    GeneralityLevel,
+    GrammaticalFactorGI,
+    GrammaticalRole,
+    LegacySigma1ReferenceUnit,
     MentalFactor,
+    OntologyClass,
     PositionalPotential,
     PredicationType,
     PropositionConstraintVector,
@@ -14,6 +20,7 @@ from .models import (
     Sigma1ReferenceUnit,
     Sigma1Thresholds,
     Sigma2Builder,
+    SigmaCompatibilityAdapter,
     Sigma2Matrix,
     SigmaPrerequisiteChecker,
     SigmaTransitionError,
@@ -22,7 +29,13 @@ from .models import (
 
 __all__ = [
     "CaseImpactVector2",
+    "EgoReferenceMode",
+    "GeneralityLevel",
+    "GrammaticalFactorGI",
+    "GrammaticalRole",
+    "LegacySigma1ReferenceUnit",
     "MentalFactor",
+    "OntologyClass",
     "PositionalPotential",
     "PredicationType",
     "PropositionConstraintVector",
@@ -34,6 +47,7 @@ __all__ = [
     "Sigma1ReferenceUnit",
     "Sigma1Thresholds",
     "Sigma2Builder",
+    "SigmaCompatibilityAdapter",
     "Sigma2Matrix",
     "SigmaPrerequisiteChecker",
     "SigmaTransitionError",

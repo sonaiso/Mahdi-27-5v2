@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
+from typing import Union
+from warnings import warn
 
 
 class SentenceSpace(Enum):
@@ -49,6 +51,59 @@ class PropositionMode(Enum):
 
     KHABAR = "zeta_k"
     INSHA = "zeta_i"
+
+
+class OntologyClass(Enum):
+    """Ontology identity class for expanded Σ1."""
+
+    ENTITY = "entity"
+    EVENT = "event"
+    QUALITY = "quality"
+    RELATION = "relation"
+    UNKNOWN = "unknown"
+
+
+class EgoReferenceMode(Enum):
+    """Reference anchoring with respect to ego/source perspective."""
+
+    SELF = "self"
+    OTHER = "other"
+    GENERIC = "generic"
+    UNKNOWN = "unknown"
+
+
+class GeneralityLevel(Enum):
+    """Generality profile for reference determination."""
+
+    PARTICULAR = "particular"
+    GENERIC = "generic"
+    UNIVERSAL = "universal"
+    UNKNOWN = "unknown"
+
+
+class GrammaticalRole(Enum):
+    """Structured grammatical role for positional compatibility checks."""
+
+    SUBJECT = "subject"
+    PREDICATE = "predicate"
+    QUALIFIER = "qualifier"
+    RELATOR = "relator"
+    TRANSFORMER = "transformer"
+
+
+@dataclass(frozen=True)
+class LegacySigma1ReferenceUnit:
+    """Legacy reduced Σ1 state used for explicit compatibility adapters."""
+
+    label: str
+    j_p: float
+    j_m: float
+    j_sigma: float
+    transition_capacity_nu: float
+    reference_variance: float
+    type_potential: TypePotential
+    positional_potential: PositionalPotential
+    purity_score: float
 
 
 @dataclass(frozen=True)
@@ -98,6 +153,15 @@ class Sigma1ReferenceUnit:
     type_potential: TypePotential
     positional_potential: PositionalPotential
     purity_score: float
+    ontology: OntologyClass = OntologyClass.UNKNOWN
+    causality: float = 0.5
+    ego_reference: EgoReferenceMode = EgoReferenceMode.UNKNOWN
+    generality: GeneralityLevel = GeneralityLevel.UNKNOWN
+    gender: str = "unspecified"
+    temporality: str = "atemporal"
+    spatiality: str = "unspecified"
+    signifier: str = ""
+    association: float = 0.0
 
 
 @dataclass(frozen=True)
@@ -196,6 +260,27 @@ class CaseImpactVector2:
     predicate_mark: str
     causal_alignment: float
     referential_alignment: float
+    grammatical_factor_code: str
+    causal_trace: str
+    referential_trace: str
+    derivational_basis: str = "effect_not_input"
+
+
+@dataclass(frozen=True)
+class GrammaticalFactorGI:
+    """Structured grammatical factor G_i used internally by Σ2."""
+
+    code: str
+    ontology_anchor: OntologyClass
+    causality_score: float
+    ego_mode: EgoReferenceMode
+    generality: GeneralityLevel
+    role: GrammaticalRole
+    positional_validity: float
+
+    @property
+    def is_positionally_valid(self) -> bool:
+        return self.positional_validity >= 0.55
 
 
 @dataclass(frozen=True)
@@ -207,7 +292,7 @@ class Sigma2Matrix:
     mental_factor: MentalFactor
     reference_predication: ReferencePredicationVector2
     ratios: RatioVector
-    grammatical_factor: str
+    grammatical_factor: GrammaticalFactorGI
     case_impact: CaseImpactVector2
     proposition_constraint: PropositionConstraintVector
     sentence_space: SentenceSpace
@@ -246,6 +331,98 @@ class SigmaPrerequisiteChecker:
         )
 
 
+class SigmaCompatibilityAdapter:
+    """Centralized compatibility adapters for Σ1 and G_i migration."""
+
+    @staticmethod
+    def legacy_sigma1_to_expanded(
+        legacy: LegacySigma1ReferenceUnit,
+    ) -> Sigma1ReferenceUnit:
+        return Sigma1ReferenceUnit(
+            label=legacy.label,
+            j_p=legacy.j_p,
+            j_m=legacy.j_m,
+            j_sigma=legacy.j_sigma,
+            transition_capacity_nu=legacy.transition_capacity_nu,
+            reference_variance=legacy.reference_variance,
+            type_potential=legacy.type_potential,
+            positional_potential=legacy.positional_potential,
+            purity_score=legacy.purity_score,
+        )
+
+    @staticmethod
+    def _infer_role(code: str) -> GrammaticalRole:
+        token = code.lower()
+        if "pred" in token:
+            return GrammaticalRole.PREDICATE
+        if "cond" in token:
+            return GrammaticalRole.PREDICATE
+        if "nas" in token:
+            return GrammaticalRole.TRANSFORMER
+        if "qual" in token:
+            return GrammaticalRole.QUALIFIER
+        return GrammaticalRole.SUBJECT
+
+    @staticmethod
+    def _role_score(unit: Sigma1ReferenceUnit, role: GrammaticalRole) -> float:
+        if role is GrammaticalRole.SUBJECT:
+            return unit.positional_potential.subject
+        if role is GrammaticalRole.PREDICATE:
+            return unit.positional_potential.predicate
+        if role is GrammaticalRole.QUALIFIER:
+            return unit.positional_potential.qualifier
+        if role is GrammaticalRole.RELATOR:
+            return unit.positional_potential.relator
+        return unit.positional_potential.transformer
+
+    @staticmethod
+    def _clamp(value: float) -> float:
+        return max(0.0, min(1.0, value))
+
+    @staticmethod
+    def legacy_grammatical_factor_to_gi(
+        legacy_grammatical_factor: str,
+        first: Sigma1ReferenceUnit,
+        second: Sigma1ReferenceUnit,
+    ) -> GrammaticalFactorGI:
+        role = SigmaCompatibilityAdapter._infer_role(legacy_grammatical_factor)
+        positional_validity = max(
+            SigmaCompatibilityAdapter._role_score(first, role),
+            SigmaCompatibilityAdapter._role_score(second, role),
+        )
+        causality_score = SigmaCompatibilityAdapter._clamp(
+            (first.causality + second.causality) / 2.0
+        )
+        return GrammaticalFactorGI(
+            code=legacy_grammatical_factor,
+            ontology_anchor=first.ontology,
+            causality_score=causality_score,
+            ego_mode=first.ego_reference,
+            generality=first.generality,
+            role=role,
+            positional_validity=positional_validity,
+        )
+
+    @staticmethod
+    def normalize_grammatical_factor(
+        grammatical_factor: Union[str, GrammaticalFactorGI],
+        first: Sigma1ReferenceUnit,
+        second: Sigma1ReferenceUnit,
+    ) -> GrammaticalFactorGI:
+        if isinstance(grammatical_factor, GrammaticalFactorGI):
+            return grammatical_factor
+        warn(
+            "Passing string grammatical_factor is deprecated; pass GrammaticalFactorGI instead.",
+            DeprecationWarning,
+            stacklevel=3,
+        )
+        return SigmaCompatibilityAdapter.legacy_grammatical_factor_to_gi(
+            grammatical_factor,
+            first,
+            second,
+        )
+
+
 class Sigma2Builder:
     """Builds Σ2 from two admissible Σ1 units plus governing factors."""
 
@@ -255,10 +432,31 @@ class Sigma2Builder:
         SentenceSpace.NASKH: (PredicationType.NASKH, PropositionMode.KHABAR),
         SentenceSpace.INSHA: (PredicationType.INSHA, PropositionMode.INSHA),
     }
+    # Fixed khabar predication is stricter than baseline Σ1 and halves the allowed
+    # reference variance window (epsilon_rho / 2.0) to reduce referential drift.
+    _KHABAR_STABILITY_FACTOR: float = 2.0
 
     @staticmethod
     def _clamp(value: float, low: float = 0.0, high: float = 1.0) -> float:
         return max(low, min(high, value))
+
+    @staticmethod
+    def _case_marks_are_causally_consistent(
+        *,
+        causal_alignment: float,
+        sentence_space: SentenceSpace,
+        subject_mark: str,
+        predicate_mark: str,
+    ) -> bool:
+        # Low causal alignment cannot carry strong khabar raf/raf fixation.
+        if (
+            sentence_space is SentenceSpace.KHABAR
+            and subject_mark == "raf"
+            and predicate_mark == "raf"
+            and causal_alignment < 0.50
+        ):
+            return False
+        return True
 
     @staticmethod
     def build(
@@ -267,7 +465,7 @@ class Sigma2Builder:
         *,
         sentence_space: SentenceSpace,
         mental_factor: MentalFactor,
-        grammatical_factor: str,
+        grammatical_factor: Union[str, GrammaticalFactorGI],
         ratios: RatioVector,
         proposition_constraint: PropositionConstraintVector,
         thresholds: Sigma1Thresholds | None = None,
@@ -281,6 +479,16 @@ class Sigma2Builder:
 
         first_report = SigmaPrerequisiteChecker.evaluate(first, thresholds)
         second_report = SigmaPrerequisiteChecker.evaluate(second, thresholds)
+        if not first_report.passes_j_m or not second_report.passes_j_m:
+            failing_units = []
+            if not first_report.passes_j_m:
+                failing_units.append(first.label)
+            if not second_report.passes_j_m:
+                failing_units.append(second.label)
+            raise SigmaTransitionError(
+                "Cannot build Σ2 when J_m prerequisite fails for: "
+                + ", ".join(failing_units)
+            )
 
         if not first_report.is_admissible:
             raise SigmaTransitionError(
@@ -294,6 +502,15 @@ class Sigma2Builder:
             raise SigmaTransitionError("Ratio vector N is invalid")
 
         chi, zeta = Sigma2Builder._SPACE_DEFAULTS[sentence_space]
+        g_i = SigmaCompatibilityAdapter.normalize_grammatical_factor(
+            grammatical_factor=grammatical_factor,
+            first=first,
+            second=second,
+        )
+        if not g_i.is_positionally_valid:
+            raise SigmaTransitionError(
+                f"G_i '{g_i.code}' is inconsistent with positional eligibility"
+            )
 
         s2 = ReferencePredicationVector2(
             mu_1=first.label,
@@ -307,13 +524,55 @@ class Sigma2Builder:
             varsigma=varsigma,
         )
 
+        average_j_m = (first.j_m + second.j_m) / 2.0
+        average_causality = (first.causality + second.causality) / 2.0
+        average_reference_variance = (
+            first.reference_variance + second.reference_variance
+        ) / 2.0
+        association_delta = abs(first.association - second.association)
+
+        causal_alignment = Sigma2Builder._clamp(
+            (average_j_m + average_causality) / 2.0
+        )
+        referential_alignment = Sigma2Builder._clamp(
+            1.0
+            - ((average_reference_variance + association_delta) / 2.0),
+        )
+        if not Sigma2Builder._case_marks_are_causally_consistent(
+            causal_alignment=causal_alignment,
+            sentence_space=sentence_space,
+            subject_mark=subject_mark,
+            predicate_mark=predicate_mark,
+        ):
+            raise SigmaTransitionError(
+                "Case marks contradict the underlying causal structure"
+            )
+        strict_khabar_variance_threshold = (
+            thresholds.epsilon_rho / Sigma2Builder._KHABAR_STABILITY_FACTOR
+        )
+        if (
+            sentence_space is SentenceSpace.KHABAR
+            and subject_mark == "raf"
+            and predicate_mark == "raf"
+            and (
+                first.reference_variance > strict_khabar_variance_threshold
+                or second.reference_variance > strict_khabar_variance_threshold
+            )
+        ):
+            raise SigmaTransitionError(
+                "Unstable reference cannot enter fixed khabar predication"
+            )
+
         case_impact = CaseImpactVector2(
             subject_mark=subject_mark,
             predicate_mark=predicate_mark,
-            causal_alignment=Sigma2Builder._clamp((first.j_m + second.j_m) / 2.0),
-            referential_alignment=Sigma2Builder._clamp(
-                1.0 - ((first.reference_variance + second.reference_variance) / 2.0),
+            causal_alignment=causal_alignment,
+            referential_alignment=referential_alignment,
+            grammatical_factor_code=g_i.code,
+            causal_trace=(
+                f"j_m_avg:{average_j_m:.3f}|causality_avg:{average_causality:.3f}"
             ),
+            referential_trace=f"reference_variance_avg:{average_reference_variance:.3f}|association_delta:{association_delta:.3f}",
         )
 
         return Sigma2Matrix(
@@ -322,7 +581,7 @@ class Sigma2Builder:
             mental_factor=mental_factor,
             reference_predication=s2,
             ratios=ratios,
-            grammatical_factor=grammatical_factor,
+            grammatical_factor=g_i,
             case_impact=case_impact,
             proposition_constraint=proposition_constraint,
             sentence_space=sentence_space,
